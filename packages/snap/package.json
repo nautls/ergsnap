@@ -22,8 +22,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "@fleet-sdk/common": "^0.2.3",
+    "@fleet-sdk/core": "^0.2.3",
+    "@fleet-sdk/crypto": "^0.2.3",
+    "@fleet-sdk/wallet": "^0.2.3",
     "@metamask/snaps-types": "^3.0.0",
-    "@metamask/snaps-ui": "^3.0.0"
+    "@metamask/snaps-ui": "^3.0.0",
+    "@scure/bip32": "^1.3.2"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.5.1",

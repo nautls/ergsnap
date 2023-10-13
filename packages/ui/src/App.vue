@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { useColorMode } from "@vueuse/core";
 import { Clock, Download, Moon, Send, Sigma, Sun } from "lucide-vue-next";
+import { ref } from "vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { connectSnap, sendHello } from "@/utils/snap";
+import { connectSnap, getAddress } from "@/utils/snap";
+import { shorten } from "@/utils/string";
 
 const theme = useColorMode();
+const address = ref("");
+
+async function connect() {
+  await connectSnap();
+  address.value = await getAddress();
+}
 
 function toggleTheme() {
   theme.value = theme.value === "dark" ? "light" : "dark";
@@ -24,8 +32,13 @@ function toggleTheme() {
         >
 
         <div class="flex gap-2">
-          <div class="flex-grow"></div>
-          <Button variant="outline" @click="connectSnap()">Connect</Button>
+          <Button v-if="!address" variant="outline" @click="connect()"
+            >Connect</Button
+          >
+          <Button v-else variant="outline" @click="connect()">{{
+            shorten(address, 10)
+          }}</Button>
+
           <Button size="icon" variant="outline" @click="toggleTheme()">
             <Moon v-if="theme === 'dark'" :size="16" />
             <Sun v-else :size="16" />
@@ -51,7 +64,7 @@ function toggleTheme() {
                 class="gap-2"
                 size="sm"
                 variant="secondary"
-                @click="sendHello"
+                @click="getAddress"
               >
                 <Send class="m-auto" :size="16" /> Send
               </Button>
