@@ -1,0 +1,40 @@
+{
+  "root": true,
+  "parser": "vue-eslint-parser",
+  "parserOptions": {
+    "parser": "@typescript-eslint/parser"
+  },
+  "env": { "es6": true },
+  "plugins": ["import", "eslint-comments", "functional"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:eslint-comments/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:vue/vue3-recommended",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+  "globals": { "BigInt": true, "console": true, "WebAssembly": true },
+  "rules": {
+    "camelcase": "off",
+    "no-console": "error",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "eslint-comments/disable-enable-pair": [
+      "error",
+      { "allowWholeFile": true }
+    ],
+    "eslint-comments/no-unused-disable": "error",
+    "import/order": ["warn", { "alphabetize": { "order": "asc" } }],
+    "sort-imports": [
+      "warn",
+      { "ignoreDeclarationSort": true, "ignoreCase": true }
+    ]
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/packages/ui/src/components/ui/**",
+    "**/utils/chadcn.ts"
+  ]
+}

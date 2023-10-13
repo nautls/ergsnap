@@ -1,0 +1,40 @@
+{
+  "name": "snap",
+  "version": "0.1.0",
+  "description": "The 'Hello, world!' of MetaMask Snaps, now written in TypeScript.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MetaMask/template-snap-monorepo.git"
+  },
+  "license": "(MIT-0 OR Apache-2.0)",
+  "main": "./dist/bundle.js",
+  "files": [
+    "dist/",
+    "images/",
+    "snap.manifest.json"
+  ],
+  "scripts": {
+    "build": "mm-snap build",
+    "clean": "rimraf dist",
+    "clean:build": "run-s clean build",
+    "serve": "mm-snap serve",
+    "dev": "mm-snap watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@metamask/snaps-types": "^3.0.0",
+    "@metamask/snaps-ui": "^3.0.0"
+  },
+  "devDependencies": {
+    "@lavamoat/allow-scripts": "^2.5.1",
+    "@metamask/snaps-cli": "^3.0.0",
+    "@metamask/snaps-jest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.6.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
