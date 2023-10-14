@@ -28,12 +28,16 @@
     "@fleet-sdk/wallet": "^0.2.3",
     "@metamask/snaps-types": "^3.0.0",
     "@metamask/snaps-ui": "^3.0.0",
-    "@scure/bip32": "^1.3.2"
+    "@noble/curves": "^1.2.0",
+    "@scure/bip32": "^1.3.2",
+    "blakejs": "^1.2.1",
+    "bn.js": "^5.2.1",
+    "elliptic": "^6.5.4",
+    "secure-random": "^1.1.2"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.5.1",
-    "@metamask/snaps-cli": "^3.0.0",
-    "@metamask/snaps-jest": "^2.0.0"
+    "@metamask/snaps-cli": "^3.0.0"
   },
   "engines": {
     "node": ">=18.6.0"
