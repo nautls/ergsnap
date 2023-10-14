@@ -11,10 +11,8 @@ export function sign(message: Uint8Array, secretKey: Uint8Array) {
 
   const sk = bytesToNumberBE(secretKey);
   const y = mod(bytesToNumberBE(randomBytes(32)), CURVE.n);
-
   const w = g.multiply(y).toRawBytes();
   const pk = g.multiply(sk).toRawBytes();
-
   const commitment = genCommitment(pk, w);
   const s = concatBytes(commitment, message);
   const c = numHash(s);

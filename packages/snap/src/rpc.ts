@@ -2,8 +2,7 @@ import { hex } from "@fleet-sdk/crypto";
 import { ErgoHDKey } from "@fleet-sdk/wallet";
 import { HDKey } from "@scure/bip32";
 
-//           "m/44'/429'/0'/0";
-const PATH = ["m", "44'", "429'", "0'"]; // , "0"
+const PATH = ["m", "44'", "429'", "0'"];
 const CRYPTO_CURVE = "secp256k1";
 const VERSIONS = { private: 0x0488ade4, public: 0x0488b21e };
 
