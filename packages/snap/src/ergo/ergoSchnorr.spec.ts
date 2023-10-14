@@ -43,7 +43,7 @@ const testVectors = [
 ];
 
 describe("Ergo Schnorr signature schema", () => {
-  it("test vectors", () => {
+  it("Should test vectors", () => {
     testVectors.forEach((tv) => {
       const message = hex.decode(tv.msg);
       const signature = hex.decode(tv.signature);
@@ -53,8 +53,8 @@ describe("Ergo Schnorr signature schema", () => {
     });
   });
 
-  it("generated signature should be valid", () => {
-    for (let i = 0; i < 10; i += 1) {
+  it("Should generate valid signature", () => {
+    for (let i = 0; i < 100; i++) {
       const message = randomBytes(32);
       const secretKey = randomBytes(32);
       const publicKey = getPublicKey(hex.encode(secretKey));
@@ -63,9 +63,7 @@ describe("Ergo Schnorr signature schema", () => {
       expect(verify(message, signature, publicKey)).toBe(true);
 
       // verify using sigma-rust
-      expect(
-        verify_signature(Address.from_public_key(publicKey), message, signature)
-      ).toBe(true);
+      expect(verify_signature(Address.from_public_key(publicKey), message, signature)).toBe(true);
     }
   });
 });
