@@ -13,8 +13,8 @@ export function sign(message: Uint8Array, secretKey: Uint8Array) {
   const y = mod(bytesToNumberBE(randomBytes(32)), CURVE.n);
   const w = g.multiply(y).toRawBytes();
   const pk = g.multiply(sk).toRawBytes();
-  const commitment = genCommitment(pk, w);
-  const s = concatBytes(commitment, message);
+
+  const s = concatBytes(genCommitment(pk, w), message);
   const c = numHash(s);
   const z = mod(sk * c + y, CURVE.n);
 
@@ -36,13 +36,10 @@ export function verify(
   const g = ECPoint.BASE;
   const c = bytesToNumberBE(signature.slice(0, 24));
   const z = bytesToNumberBE(signature.slice(24, 56));
-  const pk = ECPoint.fromHex(publicKey);
 
-  const t = pk.multiply(CURVE.n - c);
-  const w = g.multiply(z).add(t);
-
-  const commitment = genCommitment(publicKey, w.toRawBytes());
-  const s = concatBytes(commitment, message);
+  const t = ECPoint.fromHex(publicKey).multiply(CURVE.n - c);
+  const w = g.multiply(z).add(t).toRawBytes();
+  const s = concatBytes(genCommitment(publicKey, w), message);
 
   return numHash(s) === c;
 }
