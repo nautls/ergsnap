@@ -18,17 +18,12 @@
   "rules": {
     "camelcase": "off",
     "no-console": "error",
+    "vue/no-v-html": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "eslint-comments/disable-enable-pair": [
-      "error",
-      { "allowWholeFile": true }
-    ],
+    "eslint-comments/disable-enable-pair": ["error", { "allowWholeFile": true }],
     "eslint-comments/no-unused-disable": "error",
     "import/order": ["warn", { "alphabetize": { "order": "asc" } }],
-    "sort-imports": [
-      "warn",
-      { "ignoreDeclarationSort": true, "ignoreCase": true }
-    ]
+    "sort-imports": ["warn", { "ignoreDeclarationSort": true, "ignoreCase": true }]
   },
   "ignorePatterns": [
     "node_modules",

@@ -3,6 +3,12 @@ import { Clock, Download, Send, Sigma } from "lucide-vue-next";
 import AppHeader from "./components/AppHeader.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import AddressView from "./components/AddressView.vue";
 </script>
 
 <template>
@@ -23,19 +29,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
             </CardHeader>
             <CardContent class="flex justify-start gap-2">
               <div class="flex-grow">
-                <h1 class="text-3xl font-bold">823.07 ERG</h1>
-                <p class="text-xs text-muted-foreground">≈ 1,309.48 USD</p>
+                <h1 class="text-3xl font-bold">0.00 ERG</h1>
+                <p class="text-xs text-muted-foreground">≈ 0.00 USD</p>
               </div>
               <Button class="gap-2" size="sm" variant="secondary">
                 <Send class="m-auto" :size="16" /> Send
               </Button>
-              <Button class="gap-2" size="sm" variant="secondary">
-                <Download class="m-auto" :size="16" /> Receive
-              </Button>
+              <div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button class="gap-2" size="sm" variant="secondary">
+                      <Download class="m-auto" :size="16" /> Receive
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent><AddressView /></PopoverContent>
+                </Popover>
+              </div>
             </CardContent>
           </Card>
 
-          <Card class="flex-grow"> </Card>
+          <Card class="flex-grow">
+            <!-- <CardContent class="pt-6">
+
+            </CardContent> -->
+          </Card>
         </div>
 
         <Card class="w-5/12">
