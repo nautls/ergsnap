@@ -1,50 +1,16 @@
 <script setup lang="ts">
-import { useColorMode } from "@vueuse/core";
-import { Clock, Download, Moon, Send, Sigma, Sun } from "lucide-vue-next";
-import { ref } from "vue";
+import { Clock, Download, Send, Sigma } from "lucide-vue-next";
+import AppHeader from "./components/AppHeader.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { connectSnap, getAddress } from "@/utils/snap";
-import { shorten } from "@/utils/string";
-
-const theme = useColorMode();
-const address = ref("");
-
-async function connect() {
-  await connectSnap();
-  address.value = await getAddress();
-}
-
-function toggleTheme() {
-  theme.value = theme.value === "dark" ? "light" : "dark";
-}
 </script>
 
 <template>
   <div class="flex min-h-screen flex-col items-center bg-foreground/5">
     <Card
-      class="my-8 flex w-11/12 flex-grow flex-col gap-4 border p-4 shadow-xl shadow-primary/5 sm:w-11/12 lg:w-8/12"
+      class="my-8 flex w-11/12 flex-grow flex-col gap-4 border p-4 shadow-2xl shadow-primary/10 sm:w-11/12 lg:w-8/12"
     >
-      <CardHeader class="flex-row items-center gap-2 space-y-0">
-        <img src="./assets/ergo.svg" alt="Nautilus Wallet" class="w-10" />
-        <CardTitle class="flex-grow cursor-default tracking-normal"
-          >Ergo Wallet</CardTitle
-        >
-
-        <div class="flex gap-2">
-          <Button v-if="!address" variant="outline" @click="connect()"
-            >Connect</Button
-          >
-          <Button v-else variant="outline" @click="connect()">{{
-            shorten(address, 10)
-          }}</Button>
-
-          <Button size="icon" variant="outline" @click="toggleTheme()">
-            <Moon v-if="theme === 'dark'" :size="16" />
-            <Sun v-else :size="16" />
-          </Button>
-        </div>
-      </CardHeader>
+      <AppHeader />
 
       <CardContent class="flex flex-grow flex-row gap-8">
         <div class="flex flex-grow flex-col gap-8">
@@ -60,12 +26,7 @@ function toggleTheme() {
                 <h1 class="text-3xl font-bold">823.07 ERG</h1>
                 <p class="text-xs text-muted-foreground">≈ 1,309.48 USD</p>
               </div>
-              <Button
-                class="gap-2"
-                size="sm"
-                variant="secondary"
-                @click="getAddress"
-              >
+              <Button class="gap-2" size="sm" variant="secondary">
                 <Send class="m-auto" :size="16" /> Send
               </Button>
               <Button class="gap-2" size="sm" variant="secondary">

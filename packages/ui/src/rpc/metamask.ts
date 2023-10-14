@@ -1,6 +1,21 @@
-import { MetaMaskInpageProvider } from "@metamask/providers";
-import { SNAP_ORIGIN } from "../params";
-import { GetSnapsResponse, Snap } from "../types";
+import type { MetaMaskInpageProvider as MMProvider } from "@metamask/providers";
+import type { GetSnapsResponse, Snap } from "../types";
+
+export function isMetamaskPresent(): boolean {
+  return window.ethereum?.isMetaMask ?? false;
+}
+
+export function isMetamaskConnected(): boolean {
+  return window.ethereum?.isConnected() ?? false;
+}
+
+export function getProvider(): MMProvider {
+  if (window.ethereum) {
+    return window.ethereum;
+  }
+
+  throw new Error("Metamask provider is not available.");
+}
 
 /**
  * Get the installed snaps in MetaMask.
@@ -8,10 +23,8 @@ import { GetSnapsResponse, Snap } from "../types";
  * @param provider - The MetaMask inpage provider.
  * @returns The snaps installed in MetaMask.
  */
-export async function getSnaps(
-  provider?: MetaMaskInpageProvider,
-): Promise<GetSnapsResponse> {
-  return (await (provider ?? window.ethereum).request({
+export async function getSnaps(): Promise<GetSnapsResponse> {
+  return (await getProvider().request({
     method: "wallet_getSnaps",
   })) as GetSnapsResponse;
 }
@@ -23,10 +36,10 @@ export async function getSnaps(
  * @param params - The params to pass with the snap to connect.
  */
 export async function connectSnap(
-  snapId: string = SNAP_ORIGIN,
+  snapId: string,
   params: Record<"version" | string, unknown> = {},
 ) {
-  await window.ethereum.request({
+  await getProvider().request({
     method: "wallet_requestSnaps",
     params: {
       [snapId]: params,
@@ -40,26 +53,20 @@ export async function connectSnap(
  * @param version - The version of the snap to install (optional).
  * @returns The snap object returned by the extension.
  */
-export async function getSnap(version?: string): Promise<Snap | undefined> {
+export async function getSnap(
+  snapId: string,
+  version?: string,
+): Promise<Snap | undefined> {
   try {
     const snaps = await getSnaps();
-
     return Object.values(snaps).find(
-      (snap) =>
-        snap.id === SNAP_ORIGIN && (!version || snap.version === version),
+      (snap) => snap.id === snapId && (!version || snap.version === version),
     );
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.log("Failed to obtain installed snap", e);
+    console.error("Failed to obtain installed snap", e);
     return undefined;
   }
-}
-
-export async function getAddress(): Promise<string> {
-  return (await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: { snapId: SNAP_ORIGIN, request: { method: "get_address" } },
-  })) as string;
 }
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith("local:");
