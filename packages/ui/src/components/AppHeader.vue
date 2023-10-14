@@ -24,13 +24,17 @@ function toggleTheme() {
     <div class="flex gap-2">
       <Button
         v-if="!walletStore.address"
+        class="gap-2"
         variant="outline"
+        :loading="walletStore.isLoading"
         @click="walletStore.connect()"
-        >Connect</Button
       >
-      <Button v-else variant="secondary">{{
-        shorten(walletStore.address, 10)
-      }}</Button>
+        Connect
+        <template #loading>Connecting...</template>
+      </Button>
+      <Button v-else variant="secondary">
+        {{ shorten(walletStore.address, 10) }}</Button
+      >
 
       <Button size="icon" variant="outline" @click="toggleTheme()">
         <Moon v-if="theme === 'dark'" :size="16" />

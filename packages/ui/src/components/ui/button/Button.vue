@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { buttonVariants } from '.'
-import { cn } from '@/utils/chadcn'
+import { buttonVariants } from ".";
+import { Loader2 } from "lucide-vue-next";
+import { cn } from "@/utils/chadcn";
 
 interface Props {
-  variant?: NonNullable<Parameters<typeof buttonVariants>[0]>['variant']
-  size?: NonNullable<Parameters<typeof buttonVariants>[0]>['size']
-  as?: string
+  variant?: NonNullable<Parameters<typeof buttonVariants>[0]>["variant"];
+  size?: NonNullable<Parameters<typeof buttonVariants>[0]>["size"];
+  as?: string;
+  loading?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
-  as: 'button',
-})
+  as: "button",
+  loading: false,
+});
 </script>
 
 <template>
@@ -18,7 +21,8 @@ withDefaults(defineProps<Props>(), {
     :is="as"
     :class="cn(buttonVariants({ variant, size }), $attrs.class ?? '')"
   >
-    <slot />
+    <Loader2 v-if="loading" class="animate-spin" :size="16" />
+    <slot name="loading" v-if="loading && $slots.loading" />
+    <slot v-else />
   </component>
 </template>
-@/lib/chadcn
