@@ -3,7 +3,14 @@ import { useColorMode } from "@vueuse/core";
 import { Moon, Sun } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useWalletStore } from "@/stories";
+import { copy } from "@/utils/clipboard";
 import { shorten } from "@/utils/string";
 
 const walletStore = useWalletStore();
@@ -32,9 +39,19 @@ function toggleTheme() {
         Connect
         <template #loading>Connecting...</template>
       </Button>
-      <Button v-else variant="secondary">
-        {{ shorten(walletStore.address, 10) }}</Button
-      >
+
+      <TooltipProvider v-else :delay-duration="200">
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="secondary" @click="copy(walletStore.address)">
+              {{ shorten(walletStore.address, 10) }}</Button
+            ></TooltipTrigger
+          >
+          <TooltipContent>
+            <p>Click to copy</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <Button size="icon" variant="outline" @click="toggleTheme()">
         <Moon v-if="theme === 'dark'" :size="16" />
