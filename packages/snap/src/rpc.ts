@@ -152,7 +152,7 @@ function mapOutput(
   const receiving = ownPk === box.ergoTree;
   return panel([
     heading(receiving ? "Receiving" : "Sending"),
-    text(`${decimalize(box.value, ERG_DECIMALS)} **ERG**`),
+    text(`**${decimalize(box.value, ERG_DECIMALS)}** ERG`),
     ...tokens,
     text(receiving ? "To **(your address)**" : "**To**"),
     copyable(ErgoAddress.fromErgoTree(box.ergoTree).encode()),
