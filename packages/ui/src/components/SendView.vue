@@ -11,6 +11,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 </script>
 
 <template>
@@ -26,7 +27,8 @@ import { Input } from "@/components/ui/input";
         <DialogDescription> Use this tool to send assets. </DialogDescription>
       </DialogHeader>
 
-      <Input />
+      <Label for="recipient">Recipient</Label>
+      <Input id="recipient" />
 
       <DialogFooter> Save changes </DialogFooter>
     </DialogContent>
