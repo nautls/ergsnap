@@ -2,11 +2,11 @@
 import { BigNumber } from "bignumber.js";
 import { PropType } from "vue";
 import AssetIcon from "./AssetIcon.vue";
+import AssetPrice from "./AssetPrice.vue";
 import { ERG_TOKEN_ID } from "@/constants";
 import { AssetInfo } from "@/types";
 import { displayAmount, displayName } from "@/utils/assets";
 import { tokenUrlFor } from "@/utils/explorer";
-import AssetPrice from "./AssetPrice.vue";
 
 defineProps({
   asset: { type: Object as PropType<AssetInfo<Readonly<BigNumber>>>, default: undefined },

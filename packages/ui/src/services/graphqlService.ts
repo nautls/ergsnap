@@ -2,26 +2,32 @@ import {
   AddressBalance,
   Box as GraphQLBox,
   Header,
+  MutationCheckTransactionArgs,
   QueryAddressesArgs,
   QueryBoxesArgs
 } from "@ergo-graphql/types";
-import { Box, NonMandatoryRegisters, some } from "@fleet-sdk/common";
+import { Box, NonMandatoryRegisters, SignedTransaction, some } from "@fleet-sdk/common";
 import { createGqlOp, gql } from "@/utils/networking";
 
 class GraphQLService {
   #getCurrentHeight;
   #getBalance;
   #getBoxes;
+  #checkTx;
 
   constructor() {
-    const op = { url: "https://explore.sigmaspace.io/api/graphql" };
+    const opt = { url: "https://explore.sigmaspace.io/api/graphql" };
 
-    this.#getCurrentHeight = createGqlOp<{ blockHeaders: Header[] }>(CURRENT_HEIGHT_QUERY, op);
+    this.#getCurrentHeight = createGqlOp<{ blockHeaders: Header[] }>(CURRENT_HEIGHT_QUERY, opt);
     this.#getBalance = createGqlOp<
       { addresses: { balance: AddressBalance }[] },
       QueryAddressesArgs
-    >(BALANCE_QUERY, op);
-    this.#getBoxes = createGqlOp<{ boxes: GraphQLBox[] }, QueryBoxesArgs>(BOX_QUERY, op);
+    >(BALANCE_QUERY, opt);
+    this.#getBoxes = createGqlOp<{ boxes: GraphQLBox[] }, QueryBoxesArgs>(BOX_QUERY, opt);
+    this.#checkTx = createGqlOp<{ checkTransaction: string }, MutationCheckTransactionArgs>(
+      CHECK_TX_MUTATION,
+      opt
+    );
   }
 
   public async getCurrentHeight(): Promise<number | undefined> {
@@ -60,6 +66,13 @@ class GraphQLService {
         additionalRegisters: box.additionalRegisters as NonMandatoryRegisters
       })) || []
     );
+  }
+
+  public async checkTransaction(transaction: SignedTransaction): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await this.#checkTx({ signedTransaction: transaction as any });
+    console.log(response);
+    return response.data?.checkTransaction === transaction.id;
   }
 }
 
@@ -102,6 +115,12 @@ const BOX_QUERY = gql`
         amount
       }
     }
+  }
+`;
+
+export const CHECK_TX_MUTATION = gql`
+  mutation checkTransaction($signedTransaction: SignedTransaction!) {
+    checkTransaction(signedTransaction: $signedTransaction)
   }
 `;
 

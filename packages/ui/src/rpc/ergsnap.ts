@@ -1,4 +1,5 @@
 import { connectSnap, getProvider, getSnap } from ".";
+import { EIP12UnsignedTransaction, SignedTransaction } from "@fleet-sdk/common";
 
 export const SNAP_ORIGIN = import.meta.env.PROD
   ? "npm:@nautls/ergsnap"
@@ -25,5 +26,12 @@ export const ergSnap = {
       method: "wallet_invokeSnap",
       params: { snapId: SNAP_ORIGIN, request: { method: "get_address" } }
     })) as string;
+  },
+
+  async signTx(unsignedTx: EIP12UnsignedTransaction) {
+    return (await getProvider().request({
+      method: "wallet_invokeSnap",
+      params: { snapId: SNAP_ORIGIN, request: { method: "sign_tx", params: { tx: unsignedTx } } }
+    })) as SignedTransaction;
   }
 };

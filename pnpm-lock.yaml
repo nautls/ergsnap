@@ -77,6 +77,9 @@ importers:
       '@fleet-sdk/crypto':
         specifier: ^0.2.3
         version: 0.2.3
+      '@fleet-sdk/serializer':
+        specifier: ^0.2.3
+        version: 0.2.3
       '@fleet-sdk/wallet':
         specifier: ^0.2.3
         version: 0.2.3
@@ -92,18 +95,6 @@ importers:
       '@scure/bip32':
         specifier: ^1.3.2
         version: 1.3.2
-      blakejs:
-        specifier: ^1.2.1
-        version: 1.2.1
-      bn.js:
-        specifier: ^5.2.1
-        version: 5.2.1
-      elliptic:
-        specifier: ^6.5.4
-        version: 6.5.4
-      secure-random:
-        specifier: ^1.1.2
-        version: 1.1.2
     devDependencies:
       '@lavamoat/allow-scripts':
         specifier: ^2.5.1
@@ -7091,10 +7082,6 @@ packages:
       elliptic: 6.5.4
       node-addon-api: 2.0.2
       node-gyp-build: 4.6.1
-
-  /secure-random@1.1.2:
-    resolution: {integrity: sha512-H2bdSKERKdBV1SwoqYm6C0y+9EA94v6SUBOWO8kDndc4NoUih7Dv6Tsgma7zO1lv27wIvjlD0ZpMQk7um5dheQ==}
-    dev: false
 
   /semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
