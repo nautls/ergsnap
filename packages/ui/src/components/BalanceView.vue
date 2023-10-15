@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { BigNumber } from "bignumber.js";
-import { Download, Send, Sigma } from "lucide-vue-next";
+import { Download, Sigma } from "lucide-vue-next";
 import { computed } from "vue";
+import SendView from "./SendView.vue";
 import AddressView from "@/components/AddressView.vue";
 import AssetRow from "@/components/AssetRow.vue";
 import { Button } from "@/components/ui/button";
@@ -48,19 +49,17 @@ const fiatBalance = computed(() => {
           <h1 class="text-3xl font-bold">{{ ergBalance }} ERG</h1>
           <p class="text-xs text-muted-foreground">≈ {{ fiatBalance }} USD</p>
         </div>
-        <Button class="gap-2" size="sm" variant="secondary">
-          <Send class="m-auto" :size="16" /> Send
-        </Button>
-        <div>
-          <Popover>
-            <PopoverTrigger>
-              <Button class="gap-2" size="sm" variant="secondary">
-                <Download class="m-auto" :size="16" /> Receive
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent><AddressView /></PopoverContent>
-          </Popover>
-        </div>
+
+        <SendView />
+
+        <Popover>
+          <PopoverTrigger>
+            <Button class="gap-2" size="sm" variant="secondary">
+              <Download class="m-auto" :size="16" /> Receive
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent><AddressView /></PopoverContent>
+        </Popover>
       </CardContent>
     </Card>
 

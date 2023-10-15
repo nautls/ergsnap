@@ -71,7 +71,6 @@ class GraphQLService {
   public async checkTransaction(transaction: SignedTransaction): Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await this.#checkTx({ signedTransaction: transaction as any });
-    console.log(response);
     return response.data?.checkTransaction === transaction.id;
   }
 }
