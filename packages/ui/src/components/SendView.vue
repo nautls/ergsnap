@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Send } from "lucide-vue-next";
+import { ref } from "vue";
+import CleaveInput from "./CleaveInput.vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const v = ref("0");
 </script>
 
 <template>
@@ -28,7 +32,17 @@ import { Label } from "@/components/ui/label";
       </DialogHeader>
 
       <Label for="recipient">Recipient</Label>
-      <Input id="recipient" />
+      <Input id="recipient" placeholder="Recipient address" />
+
+      <Label>Asset</Label>
+      <CleaveInput
+        v-model="v"
+        :options="{
+          numeral: true,
+          numeralPositiveOnly: true,
+          numeralDecimalScale: 0
+        }"
+      />
 
       <DialogFooter> Save changes </DialogFooter>
     </DialogContent>

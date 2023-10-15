@@ -17,6 +17,7 @@
     "@vueuse/core": "^10.5.0",
     "bignumber.js": "^9.1.2",
     "class-variance-authority": "^0.7.0",
+    "cleave.js": "^1.6.0",
     "clsx": "^2.0.0",
     "lodash-es": "^4.17.21",
     "lucide-vue-next": "^0.285.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@ergo-graphql/types": "^0.5.0",
+    "@types/cleave.js": "^1.4.8",
     "@types/lodash-es": "^4.17.9",
     "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.16",
