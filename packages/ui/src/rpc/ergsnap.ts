@@ -23,7 +23,7 @@ export const ergSnap = {
   async getAddress() {
     return (await getProvider().request({
       method: "wallet_invokeSnap",
-      params: { snapId: SNAP_ORIGIN, request: { method: "get_address" } },
+      params: { snapId: SNAP_ORIGIN, request: { method: "get_address" } }
     })) as string;
-  },
+  }
 };

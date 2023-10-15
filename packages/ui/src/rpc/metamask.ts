@@ -25,7 +25,7 @@ export function getProvider(): MMProvider {
  */
 export async function getSnaps(): Promise<GetSnapsResponse> {
   return (await getProvider().request({
-    method: "wallet_getSnaps",
+    method: "wallet_getSnaps"
   })) as GetSnapsResponse;
 }
 
@@ -37,13 +37,13 @@ export async function getSnaps(): Promise<GetSnapsResponse> {
  */
 export async function connectSnap(
   snapId: string,
-  params: Record<"version" | string, unknown> = {},
+  params: Record<"version" | string, unknown> = {}
 ) {
   await getProvider().request({
     method: "wallet_requestSnaps",
     params: {
-      [snapId]: params,
-    },
+      [snapId]: params
+    }
   });
 }
 
@@ -53,14 +53,11 @@ export async function connectSnap(
  * @param version - The version of the snap to install (optional).
  * @returns The snap object returned by the extension.
  */
-export async function getSnap(
-  snapId: string,
-  version?: string,
-): Promise<Snap | undefined> {
+export async function getSnap(snapId: string, version?: string): Promise<Snap | undefined> {
   try {
     const snaps = await getSnaps();
     return Object.values(snaps).find(
-      (snap) => snap.id === snapId && (!version || snap.version === version),
+      (snap) => snap.id === snapId && (!version || snap.version === version)
     );
   } catch (e) {
     // eslint-disable-next-line no-console

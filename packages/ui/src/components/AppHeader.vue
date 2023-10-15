@@ -3,12 +3,7 @@ import { useColorMode } from "@vueuse/core";
 import { Moon, Sun } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWalletStore } from "@/stories";
 import { copy } from "@/utils/clipboard";
 import { shorten } from "@/utils/string";
@@ -24,9 +19,7 @@ function toggleTheme() {
 <template>
   <CardHeader class="flex-row items-center gap-2 space-y-0">
     <img src="../assets/ergo.svg" alt="Nautilus Wallet" class="w-10" />
-    <CardTitle class="flex-grow cursor-default tracking-normal"
-      >Ergo Wallet</CardTitle
-    >
+    <CardTitle class="flex-grow cursor-default tracking-normal">Ergo Wallet</CardTitle>
 
     <div class="flex gap-2">
       <Button
