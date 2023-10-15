@@ -86,7 +86,13 @@ async function confirmTransaction(unsignedTx: EIP12UnsignedTransaction) {
     ...unsignedTx.outputs.flatMap((x) => x.assets.map((t) => t.tokenId))
   ]);
 
-  const metadata = await getTokensMetadata(tokenIds);
+  let metadata: TokenMetadataMap;
+  try {
+    metadata = await getTokensMetadata(tokenIds);
+  } catch {
+    metadata = {};
+  }
+
   const pk = ErgoAddress.fromBase58(await getAddress()).ergoTree;
   const burning = utxoDiff(utxoSum(unsignedTx.inputs), utxoSum(unsignedTx.outputs));
 
