@@ -13,14 +13,17 @@ const SHORT_NUMBER_THRESHOLD = 1_000_000;
 
 type BigN = BigNumber | Readonly<BigNumber>;
 
-export function displayAmount(asset: AssetInfo<bigint | BigN>): string {
+export function displayAmount(asset?: AssetInfo<bigint | BigN>): string {
+  if (!asset) return "";
+
   const decimals = asset.metadata?.decimals ?? 0;
   return typeof asset.amount === "bigint"
     ? decimalize(asset.amount, { decimals, thousandMark: "," })
     : formatBigNumber(decimalizeBigNumber(asset.amount, decimals), decimals);
 }
 
-export function displayName(asset: AssetInfo<unknown>, maxLen = 20): string {
+export function displayName(asset?: AssetInfo<unknown>, maxLen = 20): string {
+  if (!asset) return "";
   return shorten(asset.metadata?.name || asset.tokenId, maxLen);
 }
 

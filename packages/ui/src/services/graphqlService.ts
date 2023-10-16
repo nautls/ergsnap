@@ -13,7 +13,7 @@ class GraphQLService {
   #getCurrentHeight;
   #getBalance;
   #getBoxes;
-  #checkTx;
+  #sendTx;
 
   constructor() {
     const opt = { url: "https://explore.sigmaspace.io/api/graphql" };
@@ -24,8 +24,8 @@ class GraphQLService {
       QueryAddressesArgs
     >(BALANCE_QUERY, opt);
     this.#getBoxes = createGqlOp<{ boxes: GraphQLBox[] }, QueryBoxesArgs>(BOX_QUERY, opt);
-    this.#checkTx = createGqlOp<{ checkTransaction: string }, MutationCheckTransactionArgs>(
-      CHECK_TX_MUTATION,
+    this.#sendTx = createGqlOp<{ submitTransaction: string }, MutationCheckTransactionArgs>(
+      SEND_TX_MUTATION,
       opt
     );
   }
@@ -68,10 +68,11 @@ class GraphQLService {
     );
   }
 
-  public async checkTransaction(transaction: SignedTransaction): Promise<boolean> {
+  public async sendTransaction(transaction: SignedTransaction): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await this.#checkTx({ signedTransaction: transaction as any });
-    return response.data?.checkTransaction === transaction.id;
+    const response = await this.#sendTx({ signedTransaction: transaction as any });
+    console.log(response);
+    return response.data?.submitTransaction ?? "";
   }
 }
 
@@ -117,9 +118,9 @@ const BOX_QUERY = gql`
   }
 `;
 
-export const CHECK_TX_MUTATION = gql`
-  mutation checkTransaction($signedTransaction: SignedTransaction!) {
-    checkTransaction(signedTransaction: $signedTransaction)
+export const SEND_TX_MUTATION = gql`
+  mutation submitTransaction($signedTransaction: SignedTransaction!) {
+    submitTransaction(signedTransaction: $signedTransaction)
   }
 `;
 

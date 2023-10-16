@@ -14,8 +14,6 @@ defineProps({
   nameClass: { type: String, default: "" },
   amountClass: { type: String, default: "" },
   maxNameLen: { type: Number, default: 20 },
-  displayPrice: { type: Boolean, default: true },
-  showBadge: Boolean,
   link: Boolean
 });
 </script>
