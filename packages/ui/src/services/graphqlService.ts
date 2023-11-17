@@ -71,7 +71,6 @@ class GraphQLService {
   public async sendTransaction(transaction: SignedTransaction): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await this.#sendTx({ signedTransaction: transaction as any });
-    console.log(response);
     return response.data?.submitTransaction ?? "";
   }
 }

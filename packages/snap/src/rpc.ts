@@ -14,14 +14,12 @@ import { hex } from "@fleet-sdk/crypto";
 import { ErgoHDKey } from "@fleet-sdk/wallet";
 import type { Json } from "@metamask/snaps-types";
 import { copyable, divider, heading, panel, text } from "@metamask/snaps-ui";
-import { HDKey } from "@scure/bip32";
 import { signTx } from "./ergo/prover";
 import { getTokensMetadata, TokenMetadata, TokenMetadataMap } from "./tokensService";
 import { shortenString } from "./utils";
 
 const PATH = ["m", "44'", "429'", "0'"];
 const CRYPTO_CURVE = "secp256k1";
-const VERSIONS = { private: 0x0488ade4, public: 0x0488b21e };
 const ERG_DECIMALS = 9;
 
 interface State {
@@ -53,16 +51,13 @@ export async function getPrivateKey(): Promise<ErgoHDKey> {
     }
   });
 
-  const key = new HDKey({
-    versions: VERSIONS,
+  return ErgoHDKey.fromExtendedKey({
+    privateKey: hex.decode(trimHexPrefix(response.privateKey!)),
     chainCode: hex.decode(trimHexPrefix(response.chainCode)),
     depth: response.depth,
     index: response.index,
-    parentFingerprint: response.parentFingerprint,
-    privateKey: response.privateKey ? hex.decode(trimHexPrefix(response.privateKey)) : undefined
-  });
-
-  return ErgoHDKey.fromExtendedKey(key.derive("m/0").privateExtendedKey);
+    parentFingerprint: response.parentFingerprint
+  }).derive("m/0");
 }
 
 export async function getAddress(): Promise<string> {
