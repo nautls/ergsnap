@@ -25,7 +25,13 @@ import {
   CommandInput,
   CommandItem
 } from "@/components/ui/command";
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -160,7 +166,10 @@ async function sign() {
   </Popover>
 
   <DialogFooter>
-    <Button variant="outline">Cancel</Button>
+    <DialogClose as-child>
+      <Button variant="outline">Cancel</Button>
+    </DialogClose>
+
     <Button :loading="loading" class="gap-2" @click="sign()"
       >Send <template #loading>Sending...</template></Button
     >
