@@ -114,15 +114,13 @@ async function sign() {
   const response = await graphQLService.submitTransaction(signed);
 
   if (response.success) {
+    const txId = response.transactionId;
     toast({
-      title: "Transaction sent",
-      description: `Transaction ${shorten(
-        response.transactionId,
-        20
-      )} has been submitted to the blockchain.`
+      title: "Success!",
+      description: `Transaction ${shorten(txId, 20)} has been submitted to the blockchain.`
     });
 
-    emit("success", response.transactionId);
+    emit("success", txId);
   } else {
     toast({
       title: "Something went wrong",
