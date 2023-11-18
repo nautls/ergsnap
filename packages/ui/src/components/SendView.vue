@@ -119,7 +119,7 @@ async function sign() {
       description: `Transaction ${shorten(
         response.transactionId,
         20
-      )} has been sent to the blockchain.`
+      )} has been submitted to the blockchain.`
     });
 
     emit("success", response.transactionId);
