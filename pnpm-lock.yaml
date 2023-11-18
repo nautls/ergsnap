@@ -102,6 +102,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@fleet-sdk/blockchain-providers':
+        specifier: ^0.3.3
+        version: 0.3.3
       '@fleet-sdk/common':
         specifier: ^0.3.2
         version: 0.3.2
@@ -1967,6 +1970,14 @@ packages:
       '@ethereumjs/rlp': 4.0.1
       ethereum-cryptography: 2.1.2
       micro-ftch: 0.3.1
+
+  /@fleet-sdk/blockchain-providers@0.3.3:
+    resolution: {integrity: sha512-2kIC8VJlb2ZmkCdRgetG2s0yQ/2uHST8Ki2oGJxmbZCD+jDl3s2NJWxZi2xoIMffh6WDmxfmhJM7hAmCMyBaLw==}
+    engines: {node: '>=14'}
+    dependencies:
+      '@fleet-sdk/common': 0.3.2
+      '@fleet-sdk/core': 0.3.2
+    dev: false
 
   /@fleet-sdk/common@0.3.2:
     resolution: {integrity: sha512-tfZPWv+rEJct9rySHGuAxQXvzUtXu7Bbiti/APWlxQ7FYm8E20XIhlrpj60MUNd/+jOLS+474MZtkylImG8d4g==}

@@ -1,4 +1,4 @@
-import { isEmpty, orderBy } from "@fleet-sdk/common";
+import { Box, isEmpty, orderBy, utxoSum } from "@fleet-sdk/common";
 import { BigNumber } from "bignumber.js";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { computed, onMounted, ref, watch } from "vue";
@@ -8,11 +8,14 @@ import { AssetInfo } from "../types";
 import { useChainStore } from "./chain";
 import { ergSnap, isMetamaskConnected, isMetamaskPresent } from "@/rpc";
 
-const fbn = (n: string): BigNumber => Object.freeze(BigNumber(n)) as BigNumber;
+const { freeze } = Object;
+const fbn = (n: string): BigNumber => freeze(BigNumber(n)) as BigNumber;
 
 export const useWalletStore = defineStore("wallet", () => {
   const chain = useChainStore();
+
   const _balance = ref<AssetInfo<BigNumber>[]>([]);
+  const _boxes = ref<Readonly<Box[]>>([]);
 
   const isLoading = ref(true);
   const isConnected = ref(false);
@@ -39,32 +42,41 @@ export const useWalletStore = defineStore("wallet", () => {
     isLoading.value = false;
   });
 
-  watch(() => chain.height, updateBalance);
-  watch(address, updateBalance);
+  watch(() => chain.height, fetchBoxes);
+  watch(address, fetchBoxes);
+  watch(_boxes, updateBalance);
 
-  async function updateBalance() {
-    const balances = await graphQLService.getBalance([address.value]);
-    if (isEmpty(balances)) {
+  async function fetchBoxes() {
+    if (!address.value) return;
+
+    _boxes.value = freeze(await graphQLService.getBoxes({ where: { address: address.value } }));
+  }
+
+  function updateBalance() {
+    if (isEmpty(_boxes)) {
       _balance.value = [];
       return;
     }
 
-    const b = balances[0];
-    _balance.value = orderBy(
-      b.assets.map(
+    const summary = utxoSum(_boxes.value);
+    const newBalance = orderBy<AssetInfo<BigNumber>>(
+      summary.tokens.map(
         (x): AssetInfo<BigNumber> => ({
           tokenId: x.tokenId,
-          amount: fbn(x.amount),
-          metadata: { decimals: x.decimals ?? 0, name: x.name ?? "" }
+          amount: fbn(x.amount.toString())
+          // metadata: { decimals: x.decimals ?? 0, name: x.name ?? "" }
         })
       ),
       (x) => x.tokenId
     );
-    _balance.value.unshift({
+
+    newBalance.unshift({
       tokenId: ERG_TOKEN_ID,
-      amount: fbn(b.nanoErgs),
+      amount: fbn(summary.nanoErgs.toString()),
       metadata: { decimals: ERG_DECIMALS, name: "ERG" }
     });
+
+    _balance.value = newBalance;
   }
 
   async function loadAddress() {
