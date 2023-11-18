@@ -9,7 +9,7 @@ import {
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
-import { computed, onMounted, ref } from "vue";
+import { computed, h, onMounted, ref } from "vue";
 import { ERG_DECIMALS } from "../constants";
 import { ergSnap } from "../rpc";
 import { graphQLService } from "../services/graphqlService";
@@ -36,7 +36,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/toast/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { useChainStore, useWalletStore } from "@/stories";
+import { shorten } from "../utils/string";
+
+const { toast } = useToast();
 
 type Asset = AssetInfo<Readonly<BigNumber>>;
 type SelectedAsset = {
@@ -84,7 +89,7 @@ async function sign() {
   loading.value = true;
   loadingStatus.value = "Fetching inputs...";
   const address = ErgoAddress.fromBase58(wallet.address);
-  const inputs = await graphQLService.getBoxes({ spent: false, ergoTrees: [address.ergoTree] });
+  const inputs = await graphQLService.getBoxes({ where: { ergoTree: address.ergoTree } });
   const erg = undecimalize(selected.value[0].amount, ERG_DECIMALS);
   const unsigned = new TransactionBuilder(chain.height)
     .from(inputs)
@@ -107,9 +112,26 @@ async function sign() {
   const signed = await ergSnap.signTx(unsigned);
 
   loadingStatus.value = "Sending...";
-  const txId = await graphQLService.sendTransaction(signed);
+  const response = await graphQLService.submitTransaction(signed);
 
-  emit("success", txId);
+  if (response.success) {
+    toast({
+      title: "Transaction sent",
+      description: `Transaction ${shorten(
+        response.transactionId,
+        20
+      )} has been sent to the blockchain.`
+    });
+
+    emit("success", response.transactionId);
+  } else {
+    toast({
+      title: "Something went wrong",
+      description: response.message,
+      variant: "destructive"
+    });
+  }
+
   loading.value = false;
 }
 </script>

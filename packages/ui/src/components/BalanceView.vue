@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { BigNumber } from "bignumber.js";
 import { Download, Send, Sigma } from "lucide-vue-next";
-import {
-  ToastAction,
-  ToastDescription,
-  ToastProvider,
-  ToastRoot,
-  ToastTitle,
-  ToastViewport
-} from "radix-vue";
 import { computed, ref } from "vue";
 import SendView from "./SendView.vue";
 import AddressView from "@/components/AddressView.vue";
@@ -22,7 +14,6 @@ import { Separator } from "@/components/ui/separator";
 import { ERG_TOKEN_ID } from "@/constants";
 import { useChainStore, useWalletStore } from "@/stories";
 import { decimalizeBigNumber, formatBigNumber } from "@/utils/assets";
-import { getTransactionUrlFor } from "@/utils/explorer";
 
 const wallet = useWalletStore();
 const chain = useChainStore();
@@ -70,7 +61,7 @@ function onSuccessTX(id: string) {
         </div>
 
         <Dialog v-model:open="modalOpen">
-          <DialogTrigger>
+          <DialogTrigger as-child>
             <Button class="gap-2" size="sm" variant="secondary">
               <Send class="m-auto" :size="16" /> Send
             </Button>
@@ -79,11 +70,8 @@ function onSuccessTX(id: string) {
             <SendView @success="onSuccessTX" />
           </DialogContent>
         </Dialog>
-        <!-- <Button class="gap-2" size="sm" variant="secondary" @click="toastOpen = true">
-          <Send class="m-auto" :size="16" /> Send
-        </Button> -->
         <Popover>
-          <PopoverTrigger>
+          <PopoverTrigger as-child>
             <Button class="gap-2" size="sm" variant="secondary">
               <Download class="m-auto" :size="16" /> Receive
             </Button>
@@ -106,33 +94,6 @@ function onSuccessTX(id: string) {
           </ScrollArea>
         </CardContent>
       </Card>
-
-      <ToastProvider>
-        <ToastRoot
-          v-model:open="toastOpen"
-          :duration="10000"
-          class="data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=end]:animate-swipeOut grid grid-cols-[auto_max-content] items-center gap-x-[15px] rounded-lg border bg-card p-[15px] text-card-foreground shadow-sm [grid-template-areas:_'title_action'_'description_action'] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:transition-[transform_200ms_ease-out]"
-        >
-          <ToastTitle class="text-slate12 mb-[5px] text-[15px] font-medium [grid-area:_title]">
-            Success!
-          </ToastTitle>
-          <ToastDescription as-child
-            ><a
-              class="url pt-2 text-sm font-normal"
-              :href="getTransactionUrlFor(txId)"
-              target="_blank"
-              rel="noopener noreferrer"
-              >View transaction on Explorer</a
-            ></ToastDescription
-          >
-          <ToastAction class="[grid-area:_action]" as-child alt-text="Close">
-            <Button size="sm" variant="outline">Close</Button>
-          </ToastAction>
-        </ToastRoot>
-        <ToastViewport
-          class="fixed bottom-0 right-0 z-[2147483647] m-0 flex w-[390px] max-w-[100vw] list-none flex-col gap-[10px] p-[var(--viewport-padding)] outline-none [--viewport-padding:_25px]"
-        />
-      </ToastProvider>
     </div>
   </div>
 </template>
