@@ -9,7 +9,7 @@ import {
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
-import { computed, h, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ERG_DECIMALS } from "../constants";
 import { ergSnap } from "../rpc";
 import { graphQLService } from "../services/graphqlService";
@@ -37,9 +37,8 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast/use-toast";
-import { ToastAction } from "@/components/ui/toast";
 import { useChainStore, useWalletStore } from "@/stories";
-import { shorten } from "../utils/string";
+import { shorten } from "@/utils/string";
 
 const { toast } = useToast();
 
