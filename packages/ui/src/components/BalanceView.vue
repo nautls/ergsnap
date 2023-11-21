@@ -26,9 +26,10 @@ const ergBalance = computed(() => {
 
   for (const asset of wallet.balance) {
     acc = acc.plus(
-      decimalizeBigNumber(asset.amount as BigNumber, asset.metadata?.decimals ?? 0).times(
-        chain.priceRates[asset.tokenId]?.erg ?? 0
-      )
+      decimalizeBigNumber(
+        asset.amount as BigNumber,
+        chain.metadata[asset.tokenId]?.decimals ?? 0
+      ).times(chain.prices[asset.tokenId]?.erg ?? 0)
     );
   }
 
@@ -36,7 +37,7 @@ const ergBalance = computed(() => {
 });
 
 const fiatBalance = computed(() => {
-  const rate = BigNumber(chain.priceRates[ERG_TOKEN_ID]?.fiat ?? 0);
+  const rate = BigNumber(chain.prices[ERG_TOKEN_ID]?.fiat ?? 0);
   return formatBigNumber(rate.times(ergBalance.value), 2);
 });
 

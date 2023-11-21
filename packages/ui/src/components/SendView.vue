@@ -98,7 +98,7 @@ async function sign() {
           .filter((x) => x.info.tokenId !== "ERG")
           .map((x) => ({
             tokenId: x.tokenId,
-            amount: undecimalize(x.amount, x.info.metadata?.decimals ?? 0)
+            amount: undecimalize(x.amount, chain.metadata[x.tokenId]?.decimals ?? 0)
           }))
       )
     )
@@ -172,12 +172,12 @@ async function sign() {
             v-for="asset in unselected"
             :key="asset.tokenId"
             class="gap-2"
-            :value="displayName(asset)"
+            :value="displayName(asset, chain)"
             @select="select(asset)"
           >
             <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
-            <div class="flex-grow">{{ displayName(asset) }}</div>
-            {{ displayAmount(asset) }}
+            <div class="flex-grow">{{ displayName(asset, chain) }}</div>
+            {{ displayAmount(asset, chain) }}
           </CommandItem>
         </CommandGroup>
       </Command>

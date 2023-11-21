@@ -1,5 +1,6 @@
 import { decimalize, isUndefined } from "@fleet-sdk/common";
 import { BigNumber } from "bignumber.js";
+import { useChainStore } from "../stories";
 import { AssetInfo } from "../types";
 import { shorten } from "./string";
 
@@ -13,18 +14,27 @@ const SHORT_NUMBER_THRESHOLD = 1_000_000;
 
 type BigN = BigNumber | Readonly<BigNumber>;
 
-export function displayAmount(asset?: AssetInfo<bigint | BigN>): string {
+type ChainStore = ReturnType<typeof useChainStore>;
+
+export function displayAmount(
+  asset: AssetInfo<bigint | BigN> | undefined,
+  chainStore: ChainStore
+): string {
   if (!asset) return "";
 
-  const decimals = asset.metadata?.decimals ?? 0;
+  const decimals = chainStore.metadata[asset.tokenId]?.decimals ?? 0;
   return typeof asset.amount === "bigint"
     ? decimalize(asset.amount, { decimals, thousandMark: "," })
     : formatBigNumber(decimalizeBigNumber(asset.amount, decimals), decimals);
 }
 
-export function displayName(asset?: AssetInfo<unknown>, maxLen = 20): string {
+export function displayName(
+  asset: AssetInfo<unknown> | undefined,
+  chainStore: ChainStore,
+  maxLen = 20
+): string {
   if (!asset) return "";
-  return shorten(asset.metadata?.name || asset.tokenId, maxLen);
+  return shorten(chainStore.metadata[asset.tokenId]?.name || asset.tokenId, maxLen);
 }
 
 export function formatBigNumber(number?: BigN, decimals?: number): string {
