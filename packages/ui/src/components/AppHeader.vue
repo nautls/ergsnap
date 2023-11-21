@@ -36,7 +36,7 @@ function toggleTheme() {
         v-if="!walletStore.address"
         class="gap-2"
         variant="outline"
-        :loading="walletStore.isLoading"
+        :loading="walletStore.loading"
         @click="walletStore.connect()"
       >
         Connect
