@@ -5,7 +5,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { ERG_DECIMALS, ERG_TOKEN_ID } from "../constants";
 import { graphQLService } from "../services/graphqlService";
 import { AssetInfo } from "../types";
-import { useChainStore } from "./chain";
+import { useChainStore } from "./chainStore";
 import { ergSnap, isMetamaskConnected, isMetamaskPresent } from "@/rpc";
 
 const { freeze } = Object;
