@@ -15,10 +15,7 @@ const fbn = (n: string): BigNumber => freeze(BigNumber(n)) as BigNumber;
 const balanceSerializer = {
   read(raw: string): AssetInfo<BigNumber>[] {
     const data = JSON.parse(raw) as AssetInfo<string>[];
-    return data.map((asset) => ({
-      tokenId: asset.tokenId,
-      amount: fbn(asset.amount)
-    }));
+    return data.map((asset) => ({ tokenId: asset.tokenId, amount: fbn(asset.amount) }));
   },
   write(value: AssetInfo<BigNumber>[]): string {
     return JSON.stringify(value.map((x) => ({ tokenId: x.tokenId, amount: x.amount.toString() })));
@@ -28,10 +25,7 @@ const balanceSerializer = {
 export const useWalletStore = defineStore("wallet", () => {
   const chain = useChainStore();
 
-  const balance = useStorage<AssetInfo<BigNumber>[]>("balance-cache", [], localStorage, {
-    serializer: balanceSerializer,
-    listenToStorageChanges: false
-  });
+  const balance = ref<AssetInfo<BigNumber>[]>([]);
   const boxes = ref<Readonly<Box[]>>([]);
 
   const loading = ref(true);
@@ -58,7 +52,14 @@ export const useWalletStore = defineStore("wallet", () => {
   });
 
   watch(() => chain.height, fetchBoxes);
-  watch(address, fetchBoxes);
+  watch(address, (addr) => {
+    useStorage(`${addr}-balance-cache`, balance, localStorage, {
+      serializer: balanceSerializer,
+      listenToStorageChanges: false
+    });
+
+    fetchBoxes();
+  });
   watch(boxes, updateBalance);
 
   async function fetchBoxes() {
