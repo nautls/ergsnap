@@ -23,7 +23,8 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem
+  CommandItem,
+  CommandList
 } from "@/components/ui/command";
 import {
   DialogClose,
@@ -165,21 +166,23 @@ async function sign() {
     </PopoverTrigger>
     <PopoverContent class="w-[21rem] p-0">
       <Command>
-        <CommandInput placeholder="Search framework..." />
-        <CommandEmpty>No asset found.</CommandEmpty>
-        <CommandGroup>
-          <CommandItem
-            v-for="asset in unselected"
-            :key="asset.tokenId"
-            class="gap-2"
-            :value="displayName(asset, chain)"
-            @select="select(asset)"
-          >
-            <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
-            <div class="flex-grow">{{ displayName(asset, chain) }}</div>
-            {{ displayAmount(asset, chain) }}
-          </CommandItem>
-        </CommandGroup>
+        <CommandInput placeholder="Search assets..." />
+        <CommandList>
+          <CommandEmpty>No asset found.</CommandEmpty>
+          <CommandGroup>
+            <CommandItem
+              v-for="asset in unselected"
+              :key="asset.tokenId"
+              class="gap-2"
+              :value="displayName(asset, chain)"
+              @select="select(asset)"
+            >
+              <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
+              <div class="flex-grow">{{ displayName(asset, chain) }}</div>
+              {{ displayAmount(asset, chain) }}
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
       </Command>
     </PopoverContent>
   </Popover>
