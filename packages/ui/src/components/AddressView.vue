@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { renderSVG } from "uqr";
 import { onMounted, ref, watch } from "vue";
+import { copy } from "../utils/clipboard";
 import Button from "./ui/button/Button.vue";
+import { useToast } from "@/components/ui/toast/use-toast";
 import { useWalletStore } from "@/stories";
 
+const { toast } = useToast();
 const wallet = useWalletStore();
 const svg = ref("");
 
@@ -12,6 +15,14 @@ watch(() => wallet.address, generateQRCode);
 
 function generateQRCode() {
   svg.value = renderSVG(wallet.address, { ecc: "L", border: 0 });
+}
+
+function copyAddress() {
+  copy(wallet.address);
+  toast({
+    title: "Copied!",
+    description: "Your address has been copied to the clipboard."
+  });
 }
 </script>
 
@@ -24,6 +35,6 @@ function generateQRCode() {
       </div>
     </div>
 
-    <Button size="sm" class="w-full">Copy address</Button>
+    <Button size="sm" class="w-full" @click="copyAddress">Copy address</Button>
   </div>
 </template>

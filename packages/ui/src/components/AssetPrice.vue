@@ -13,13 +13,14 @@ const props = defineProps({
 });
 
 const price = computed(() => {
-  if (!props.asset || !chain.priceRates[props.asset.tokenId]?.fiat) {
+  if (!props.asset || !chain.prices[props.asset.tokenId]?.fiat) {
     return undefined;
   }
 
-  return decimalizeBigNumber(props.asset.amount, props.asset.metadata?.decimals ?? 0).multipliedBy(
-    chain.priceRates[props.asset.tokenId]?.fiat || 0
-  );
+  return decimalizeBigNumber(
+    props.asset.amount,
+    chain.metadata[props.asset.tokenId]?.decimals ?? 0
+  ).multipliedBy(chain.prices[props.asset.tokenId]?.fiat || 0);
 });
 </script>
 

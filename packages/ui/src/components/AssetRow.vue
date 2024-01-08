@@ -4,9 +4,12 @@ import { PropType } from "vue";
 import AssetIcon from "./AssetIcon.vue";
 import AssetPrice from "./AssetPrice.vue";
 import { ERG_TOKEN_ID } from "@/constants";
+import { useChainStore } from "@/stories";
 import { AssetInfo } from "@/types";
 import { displayAmount, displayName } from "@/utils/assets";
 import { tokenUrlFor } from "@/utils/explorer";
+
+const chain = useChainStore();
 
 defineProps({
   asset: { type: Object as PropType<AssetInfo<Readonly<BigNumber>>>, default: undefined },
@@ -30,15 +33,15 @@ defineProps({
           target="_blank"
           rel="noopener noreferrer"
         >
-          {{ displayName(asset, asset.metadata?.name ? maxNameLen : 10) }}
+          {{ displayName(asset, chain, chain.metadata[asset.tokenId]?.name ? maxNameLen : 10) }}
         </a>
         <div v-else :class="nameClass" class="break-all">
-          {{ displayName(asset, asset.metadata?.name ? maxNameLen : 10) }}
+          {{ displayName(asset, chain, chain.metadata[asset.tokenId]?.name ? maxNameLen : 10) }}
         </div>
       </div>
 
       <div class="flex flex-col items-end" :class="amountClass">
-        <span class="font-bold">{{ displayAmount(asset) }}</span>
+        <span class="font-bold">{{ displayAmount(asset, chain) }}</span>
         <AssetPrice :asset="asset" />
       </div>
     </template>

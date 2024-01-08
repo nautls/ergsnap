@@ -3,13 +3,23 @@ import { useColorMode } from "@vueuse/core";
 import { Moon, Sun } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWalletStore } from "@/stories";
 import { copy } from "@/utils/clipboard";
 import { shorten } from "@/utils/string";
 
+const { toast } = useToast();
 const walletStore = useWalletStore();
 const theme = useColorMode();
+
+function copyAddress() {
+  copy(walletStore.address);
+  toast({
+    title: "Copied!",
+    description: "Your address has been copied to the clipboard."
+  });
+}
 
 function toggleTheme() {
   theme.value = theme.value === "dark" ? "light" : "dark";
@@ -26,7 +36,7 @@ function toggleTheme() {
         v-if="!walletStore.address"
         class="gap-2"
         variant="outline"
-        :loading="walletStore.isLoading"
+        :loading="walletStore.loading"
         @click="walletStore.connect()"
       >
         Connect
@@ -36,7 +46,7 @@ function toggleTheme() {
       <TooltipProvider v-else :delay-duration="200">
         <Tooltip>
           <TooltipTrigger>
-            <Button variant="secondary" @click="copy(walletStore.address)">
+            <Button variant="secondary" @click="copyAddress">
               {{ shorten(walletStore.address, 10) }}</Button
             ></TooltipTrigger
           >

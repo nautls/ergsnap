@@ -1,126 +1,67 @@
-import {
-  AddressBalance,
-  Box as GraphQLBox,
-  Header,
-  MutationCheckTransactionArgs,
-  QueryAddressesArgs,
-  QueryBoxesArgs
-} from "@ergo-graphql/types";
-import { Box, NonMandatoryRegisters, SignedTransaction, some } from "@fleet-sdk/common";
-import { createGqlOp, gql } from "@/utils/networking";
+import { Token, QueryTokensArgs as TokenArgs } from "@ergo-graphql/types";
+import { ErgoGraphQLProvider } from "@fleet-sdk/blockchain-providers";
+import { chunk } from "@fleet-sdk/common";
+import { AssetMetadata } from "../types";
 
-class GraphQLService {
+type HeaderResponse = { blockHeaders: { height: number }[] };
+type CheckMempoolResponse = { mempool: { transactions: { transactionId: string }[] } };
+type CheckMempoolArgs = { address: string };
+type GetStateResponse = HeaderResponse & CheckMempoolResponse;
+type TokenResponse = { tokens: Token[] };
+
+type StatusCheck = {
+  height: number;
+  mempoolTransactionIds?: string[];
+};
+
+export type GqlAssetMetadata = {
+  tokenId: string;
+} & AssetMetadata;
+
+class GraphQLService extends ErgoGraphQLProvider {
   #getCurrentHeight;
-  #getBalance;
-  #getBoxes;
-  #sendTx;
+  #getState;
+  #getTokenMetadata;
 
   constructor() {
-    const opt = { url: "https://explore.sigmaspace.io/api/graphql" };
+    super("https://explore.sigmaspace.io/api/graphql");
 
-    this.#getCurrentHeight = createGqlOp<{ blockHeaders: Header[] }>(CURRENT_HEIGHT_QUERY, opt);
-    this.#getBalance = createGqlOp<
-      { addresses: { balance: AddressBalance }[] },
-      QueryAddressesArgs
-    >(BALANCE_QUERY, opt);
-    this.#getBoxes = createGqlOp<{ boxes: GraphQLBox[] }, QueryBoxesArgs>(BOX_QUERY, opt);
-    this.#sendTx = createGqlOp<{ submitTransaction: string }, MutationCheckTransactionArgs>(
-      SEND_TX_MUTATION,
-      opt
-    );
+    this.#getCurrentHeight = this.createOperation<HeaderResponse>(CURRENT_HEIGHT_QUERY);
+    this.#getState = this.createOperation<GetStateResponse, CheckMempoolArgs>(STATE_QUERY);
+    this.#getTokenMetadata = this.createOperation<TokenResponse, TokenArgs>(TOKEN_METADATA_QUERY);
   }
 
-  public async getCurrentHeight(): Promise<number | undefined> {
+  public async getCurrentHeight(): Promise<number> {
     const response = await this.#getCurrentHeight();
-    return response.data?.blockHeaders[0].height;
+    return response.data?.blockHeaders[0].height ?? 0;
   }
 
-  public async getBalance(addresses: string[]) {
-    const response = await this.#getBalance({ addresses });
-    return response.data?.addresses.flatMap((x) => x.balance) || [];
+  public async getState(address: string): Promise<StatusCheck> {
+    const response = await this.#getState({ address });
+
+    return {
+      height: response.data?.blockHeaders[0].height ?? 0,
+      mempoolTransactionIds: response.data?.mempool.transactions.map((x) => x.transactionId)
+    };
   }
 
-  public async *yeldBoxes(args: QueryBoxesArgs) {
-    const take = 50;
+  public async *streamMetadata(tokenIds: string[]): AsyncGenerator<GqlAssetMetadata[]> {
+    const chunks = chunk(tokenIds, 20);
+    for (const tokenIds of chunks) {
+      const response = await this.#getTokenMetadata({ tokenIds });
 
-    let len = 0;
-    let skip = 0;
-
-    do {
-      const chunk = await this.getBoxes({ ...args, take, skip });
-      skip += take;
-      len = chunk.length;
-
-      if (some(chunk)) {
-        yield chunk;
+      if (response.data?.tokens) {
+        yield response.data.tokens as GqlAssetMetadata[];
       }
-    } while (len === take);
-  }
-
-  public async getBoxes(args: QueryBoxesArgs): Promise<Box<string>[]> {
-    const response = await this.#getBoxes(args);
-
-    return (
-      response.data?.boxes.map((box) => ({
-        ...box,
-        additionalRegisters: box.additionalRegisters as NonMandatoryRegisters
-      })) || []
-    );
-  }
-
-  public async sendTransaction(transaction: SignedTransaction): Promise<string> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await this.#sendTx({ signedTransaction: transaction as any });
-    return response.data?.submitTransaction ?? "";
+    }
   }
 }
 
-const CURRENT_HEIGHT_QUERY = gql`
-  query height {
-    blockHeaders(take: 1) {
-      height
-    }
-  }
-`;
+const CURRENT_HEIGHT_QUERY = `query height { blockHeaders(take: 1) { height } }`;
+const TOKEN_METADATA_QUERY = `query tokens($tokenIds: [String!]!) { tokens(tokenIds: $tokenIds) { tokenId name decimals } }`;
 
-const BALANCE_QUERY = gql`
-  query balances($addresses: [String!]!) {
-    addresses(addresses: $addresses) {
-      balance {
-        nanoErgs
-        assets {
-          tokenId
-          amount
-          decimals
-          name
-        }
-      }
-    }
-  }
-`;
-
-const BOX_QUERY = gql`
-  query Boxes($ergoTrees: [String!], $spent: Boolean!, $skip: Int, $take: Int) {
-    boxes(ergoTrees: $ergoTrees, spent: $spent, skip: $skip, take: $take) {
-      boxId
-      transactionId
-      value
-      creationHeight
-      index
-      ergoTree
-      additionalRegisters
-      assets {
-        tokenId
-        amount
-      }
-    }
-  }
-`;
-
-export const SEND_TX_MUTATION = gql`
-  mutation submitTransaction($signedTransaction: SignedTransaction!) {
-    submitTransaction(signedTransaction: $signedTransaction)
-  }
-`;
+const HEIGHT_FIELDS = "blockHeaders(take: 1) { height }";
+const MEMPOOL_FIELDS = "mempool { transactions(address: $address) { transactionId } }";
+const STATE_QUERY = `query state($address: String) { ${HEIGHT_FIELDS} ${MEMPOOL_FIELDS} }`;
 
 export const graphQLService = new GraphQLService();

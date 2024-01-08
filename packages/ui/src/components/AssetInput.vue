@@ -7,6 +7,9 @@ import { vCleave } from "@/directives/cleave";
 import { AssetInfo, CleaveOnChangedEvent, CleaveOptions, HTMLCleaveElement } from "@/types";
 import { decimalizeBigNumber, displayName, displayAmount } from "@/utils/assets";
 import { cn } from "@/utils/chadcn";
+import { useChainStore } from "../stories";
+
+const chain = useChainStore();
 
 // emits
 const emit = defineEmits(["update:modelValue"]);
@@ -62,7 +65,7 @@ function focus() {
 function setFullBalance() {
   modelValue.value = decimalizeBigNumber(
     props.asset?.amount ?? BigNumber(0),
-    props.asset?.metadata?.decimals ?? 0
+    chain.metadata[props.asset?.tokenId ?? ""]?.decimals ?? 0
   ).toString();
 }
 
@@ -77,7 +80,7 @@ defineExpose({ focus });
         ...options,
         numeral: true,
         numeralPositiveOnly: true,
-        numeralDecimalScale: props.asset?.metadata?.decimals ?? 0,
+        numeralDecimalScale: chain.metadata[props.asset?.tokenId ?? '']?.decimals ?? 0,
         initValue: props.modelValue,
         onValueChanged: onChanged
       }"
@@ -89,11 +92,13 @@ defineExpose({ focus });
       "
     />
     <div class="absolute right-3 top-3 flex flex-row items-center gap-1">
-      <div>{{ displayName(asset) }}</div>
+      <div>{{ displayName(asset, chain) }}</div>
       <AssetIcon :token-id="props.asset?.tokenId ?? ''" custom-class="w-5" />
     </div>
     <div class="absolute bottom-2 right-3 text-xs text-muted-foreground">
-      <a class="cursor-pointer" @click="setFullBalance()">Balance: {{ displayAmount(asset) }}</a>
+      <a class="cursor-pointer" @click="setFullBalance()"
+        >Balance: {{ displayAmount(asset, chain) }}</a
+      >
     </div>
   </div>
 </template>

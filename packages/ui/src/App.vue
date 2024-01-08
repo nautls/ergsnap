@@ -3,6 +3,7 @@ import { Clock } from "lucide-vue-next";
 import AppHeader from "./components/AppHeader.vue";
 import BalanceView from "@/components/BalanceView.vue";
 import { Card, CardContent } from "@/components/ui/card";
+import Toaster from "@/components/ui/toast/Toaster.vue";
 </script>
 
 <template>
@@ -26,4 +27,5 @@ import { Card, CardContent } from "@/components/ui/card";
       </CardContent>
     </Card>
   </div>
+  <Toaster />
 </template>

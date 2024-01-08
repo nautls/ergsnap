@@ -36,7 +36,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/toast/use-toast";
 import { useChainStore, useWalletStore } from "@/stories";
+import { shorten } from "@/utils/string";
+
+const { toast } = useToast();
 
 type Asset = AssetInfo<Readonly<BigNumber>>;
 type SelectedAsset = {
@@ -84,7 +88,7 @@ async function sign() {
   loading.value = true;
   loadingStatus.value = "Fetching inputs...";
   const address = ErgoAddress.fromBase58(wallet.address);
-  const inputs = await graphQLService.getBoxes({ spent: false, ergoTrees: [address.ergoTree] });
+  const inputs = await graphQLService.getBoxes({ where: { ergoTree: address.ergoTree } });
   const erg = undecimalize(selected.value[0].amount, ERG_DECIMALS);
   const unsigned = new TransactionBuilder(chain.height)
     .from(inputs)
@@ -94,7 +98,7 @@ async function sign() {
           .filter((x) => x.info.tokenId !== "ERG")
           .map((x) => ({
             tokenId: x.tokenId,
-            amount: undecimalize(x.amount, x.info.metadata?.decimals ?? 0)
+            amount: undecimalize(x.amount, chain.metadata[x.tokenId]?.decimals ?? 0)
           }))
       )
     )
@@ -107,9 +111,24 @@ async function sign() {
   const signed = await ergSnap.signTx(unsigned);
 
   loadingStatus.value = "Sending...";
-  const txId = await graphQLService.sendTransaction(signed);
+  const response = await graphQLService.submitTransaction(signed);
 
-  emit("success", txId);
+  if (response.success) {
+    const txId = response.transactionId;
+    toast({
+      title: "Success!",
+      description: `Transaction ${shorten(txId, 20)} has been submitted to the blockchain.`
+    });
+
+    emit("success", txId);
+  } else {
+    toast({
+      title: "Something went wrong",
+      description: response.message,
+      variant: "destructive"
+    });
+  }
+
   loading.value = false;
 }
 </script>
@@ -153,12 +172,12 @@ async function sign() {
             v-for="asset in unselected"
             :key="asset.tokenId"
             class="gap-2"
-            :value="displayName(asset)"
+            :value="displayName(asset, chain)"
             @select="select(asset)"
           >
             <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
-            <div class="flex-grow">{{ displayName(asset) }}</div>
-            {{ displayAmount(asset) }}
+            <div class="flex-grow">{{ displayName(asset, chain) }}</div>
+            {{ displayAmount(asset, chain) }}
           </CommandItem>
         </CommandGroup>
       </Command>

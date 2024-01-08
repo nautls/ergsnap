@@ -8,7 +8,7 @@ import { ERG_TOKEN_ID } from "@/constants";
 import { get } from "@/utils/networking";
 
 const _1 = BigNumber(1);
-const MIN_USD_LIQUIDITY = 1_00;
+const MIN_USD_LIQUIDITY = 1_000;
 const COINGECKO_BASE_URI = "https://api.coingecko.com/api/";
 
 const HODLERG3_TOKEN_ID = "cbd75cfe1a4f37f9a22eaee516300e36ea82017073036f07a09c1d2e10277cda";
@@ -47,8 +47,8 @@ async function getTokenRatesFromSpectrum(): Promise<Map<string, BigNumber>> {
 
 async function getHodlErg3TokenRate(): Promise<BigNumber | undefined> {
   let boxes = await graphQLService.getBoxes({
-    spent: false,
-    ergoTrees: [HODLERG_CONTRACT]
+    from: "blockchain",
+    where: { ergoTree: HODLERG_CONTRACT }
   });
 
   boxes = boxes.filter((b) => some(b.assets) && b.assets[0].tokenId === HODLERG3_NFT_ID);

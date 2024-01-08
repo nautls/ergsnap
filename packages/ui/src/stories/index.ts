@@ -1,2 +1,2 @@
-export * from "./wallet";
-export * from "./chain";
+export * from "./walletStore";
+export * from "./chainStore";
