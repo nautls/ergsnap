@@ -1,5 +1,5 @@
-import { connectSnap, getProvider, getSnap } from ".";
 import { EIP12UnsignedTransaction, SignedTransaction } from "@fleet-sdk/common";
+import { connectSnap, getProvider, getSnap } from ".";
 
 export const SNAP_ORIGIN = import.meta.env.PROD
   ? "npm:@nautls/ergsnap"

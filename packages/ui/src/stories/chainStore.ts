@@ -1,4 +1,4 @@
-import { isEmpty, uniq } from "@fleet-sdk/common";
+import { isEmpty, some, uniq } from "@fleet-sdk/common";
 import { useStorage } from "@vueuse/core";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
@@ -45,7 +45,7 @@ export const useChainStore = defineStore("chain", () => {
 
   // hooks
   onMounted(async () => {
-    _timer = setInterval(loadState, 5000) as unknown as number;
+    _timer = setInterval(loadState, 4000) as unknown as number;
 
     await Promise.all([loadState(), loadPrices()]);
     loading.value = false;
@@ -65,8 +65,8 @@ export const useChainStore = defineStore("chain", () => {
     if (wallet.address) {
       const state = await graphQLService.getState(wallet.address);
       newHeight = state.height;
-      if (state.mempoolTransactionIds) {
-        state.mempoolTransactionIds.map(mempoolTxIds.value.add);
+      if (some(state.mempoolTransactionIds)) {
+        state.mempoolTransactionIds.map((id) => mempoolTxIds.value.add(id));
       }
     } else {
       newHeight = await graphQLService.getCurrentHeight();
@@ -101,7 +101,7 @@ export const useChainStore = defineStore("chain", () => {
     }
   }
 
-  return { prices, metadata, loading, height };
+  return { prices, metadata, loading, height, mempoolTxIds };
 });
 
 if (import.meta.hot) {

@@ -32,6 +32,8 @@ export const useWalletStore = defineStore("wallet", () => {
   const connected = ref(false);
   const address = ref("");
 
+  let _fetchingBoxes = false;
+
   onMounted(async () => {
     const connected = isMetamaskPresent() && isMetamaskConnected() && (await ergSnap.getVersion());
 
@@ -52,20 +54,26 @@ export const useWalletStore = defineStore("wallet", () => {
   });
 
   watch(() => chain.height, fetchBoxes);
+  watch(() => chain.mempoolTxIds, fetchBoxes, { deep: true });
+  watch(boxes, updateBalance);
   watch(address, (addr) => {
+    fetchBoxes();
     useStorage(`${addr}-balance-cache`, balance, localStorage, {
       serializer: balanceSerializer,
       listenToStorageChanges: false
     });
-
-    fetchBoxes();
   });
-  watch(boxes, updateBalance);
 
   async function fetchBoxes() {
-    if (!address.value) return;
+    if (!address.value || _fetchingBoxes) return;
+    _fetchingBoxes = true;
 
-    boxes.value = freeze(await graphQLService.getBoxes({ where: { address: address.value } }));
+    try {
+      const response = await graphQLService.getBoxes({ where: { address: address.value } });
+      boxes.value = freeze(response);
+    } finally {
+      _fetchingBoxes = false;
+    }
   }
 
   function updateBalance() {
