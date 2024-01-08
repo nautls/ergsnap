@@ -92,7 +92,7 @@ defineExpose({ focus });
       "
     />
     <div class="absolute right-3 top-3 flex flex-row items-center gap-1">
-      <div>{{ displayName(asset, chain) }}</div>
+      <div>{{ displayName(asset, chain, 10) }}</div>
       <AssetIcon :token-id="props.asset?.tokenId ?? ''" custom-class="w-5" />
     </div>
     <div class="absolute bottom-2 right-3 text-xs text-muted-foreground">
