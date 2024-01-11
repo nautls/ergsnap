@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { isEmpty, undecimalize } from "@fleet-sdk/common";
-import { ErgoAddress, OutputBuilder, TransactionBuilder } from "@fleet-sdk/core";
+import { decimalize, isEmpty, undecimalize } from "@fleet-sdk/common";
+import {
+  ErgoAddress,
+  OutputBuilder,
+  SAFE_MIN_BOX_VALUE,
+  TransactionBuilder
+} from "@fleet-sdk/core";
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
@@ -57,6 +62,7 @@ const loadingStatus = ref("");
 const selectorOpened = ref(false);
 const recipient = ref("");
 const selected = ref<SelectedAsset[]>([]);
+
 const unselected = computed(() => {
   if (isEmpty(selected.value)) {
     return wallet.balance;
@@ -65,12 +71,23 @@ const unselected = computed(() => {
   return differenceBy(wallet.balance, selected.value, (x) => x.tokenId);
 });
 
+const ergAmount = computed(() => {
+  const erg = selected.value[0];
+  return undecimalize(erg?.amount ?? "0", ERG_DECIMALS);
+});
+
 onMounted(() => {
   select(wallet.balance[0]);
 });
 
 function select(asset: Asset) {
   selectorOpened.value = false;
+
+  if (asset.tokenId !== "ERG" && ergAmount.value < SAFE_MIN_BOX_VALUE) {
+    const erg = selected.value[0];
+    erg.amount = decimalize(SAFE_MIN_BOX_VALUE, ERG_DECIMALS);
+  }
+
   selected.value.push({
     amount: "",
     tokenId: asset.tokenId,
@@ -78,9 +95,9 @@ function select(asset: Asset) {
   });
 }
 
-async function sign() {
+async function send() {
   loading.value = true;
-  loadingStatus.value = "Fetching inputs...";
+  loadingStatus.value = "Loading...";
   const address = ErgoAddress.fromBase58(wallet.address);
   const inputs = await graphQLService.getBoxes({ where: { ergoTree: address.ergoTree } });
   const erg = undecimalize(selected.value[0].amount, ERG_DECIMALS);
@@ -100,7 +117,7 @@ async function sign() {
     .payMinFee()
     .build()
     .toEIP12Object();
-  console.log(unsigned);
+
   loadingStatus.value = "Signing...";
   const signed = await ergSnap.signTx(unsigned);
 
@@ -124,11 +141,22 @@ async function sign() {
   }
 
   loading.value = false;
+  loadingStatus.value = "";
 }
 
-const onSubmit = handleSubmit((values) => {
-  console.log("Form submitted!", values);
-  sign();
+const onSubmit = handleSubmit(async () => {
+  try {
+    await send();
+  } catch (e) {
+    loading.value = false;
+    loadingStatus.value = "";
+
+    toast({
+      title: "Something went wrong",
+      description: (e as Error).message,
+      variant: "destructive"
+    });
+  }
 });
 </script>
 
@@ -208,11 +236,11 @@ const onSubmit = handleSubmit((values) => {
 
   <DialogFooter>
     <DialogClose as-child>
-      <Button variant="outline">Cancel</Button>
+      <Button variant="outline" :disabled="loading">Cancel</Button>
     </DialogClose>
 
-    <Button type="submit" form="send-form" :loading="loading" class="gap-2"
-      >Send <template #loading>Sending...</template></Button
+    <Button type="submit" form="send-form" :loading="loading" class="gap-2" :disabled="loading"
+      >Send <template #loading>{{ loadingStatus }}</template></Button
     >
   </DialogFooter>
 </template>
