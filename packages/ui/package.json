@@ -27,8 +27,8 @@
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "uqr": "^0.1.2",
-    "vue": "^3.4.5",
-    "vue-router": "^4.2.5"
+    "vee-validate": "^4.12.4",
+    "vue": "^3.4.5"
   },
   "devDependencies": {
     "@ergo-graphql/types": "^0.5.1",

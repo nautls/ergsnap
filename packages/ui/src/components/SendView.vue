@@ -1,20 +1,16 @@
 <script setup lang="ts">
 import { isEmpty, undecimalize } from "@fleet-sdk/common";
-import {
-  ErgoAddress,
-  OutputBuilder,
-  SAFE_MIN_BOX_VALUE,
-  TransactionBuilder
-} from "@fleet-sdk/core";
+import { ErgoAddress, OutputBuilder, TransactionBuilder } from "@fleet-sdk/core";
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
+import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import { ERG_DECIMALS } from "../constants";
 import { ergSnap } from "../rpc";
 import { graphQLService } from "../services/graphqlService";
 import { AssetInfo } from "../types";
-import { decimalizeBigNumber, displayAmount, displayName } from "../utils/assets";
+import { displayAmount, displayName } from "../utils/assets";
 import AssetIcon from "./AssetIcon.vue";
 import AssetInput from "./AssetInput.vue";
 import { Button } from "@/components/ui/button";
@@ -33,14 +29,15 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast/use-toast";
 import { useChainStore, useWalletStore } from "@/stories";
 import { shorten } from "@/utils/string";
 
+const { handleSubmit } = useForm();
 const { toast } = useToast();
 
 type Asset = AssetInfo<Readonly<BigNumber>>;
@@ -70,16 +67,12 @@ const unselected = computed(() => {
 
 onMounted(() => {
   select(wallet.balance[0]);
-  selected.value[0].amount = decimalizeBigNumber(
-    BigNumber(SAFE_MIN_BOX_VALUE.toString()),
-    ERG_DECIMALS
-  ).toString();
 });
 
 function select(asset: Asset) {
   selectorOpened.value = false;
   selected.value.push({
-    amount: "0",
+    amount: "",
     tokenId: asset.tokenId,
     info: asset
   });
@@ -107,7 +100,7 @@ async function sign() {
     .payMinFee()
     .build()
     .toEIP12Object();
-
+  console.log(unsigned);
   loadingStatus.value = "Signing...";
   const signed = await ergSnap.signTx(unsigned);
 
@@ -132,23 +125,49 @@ async function sign() {
 
   loading.value = false;
 }
+
+const onSubmit = handleSubmit((values) => {
+  console.log("Form submitted!", values);
+  sign();
+});
 </script>
 
 <template>
   <DialogHeader>
     <DialogTitle>Send</DialogTitle>
-    <DialogDescription> Use this tool to send assets. </DialogDescription>
+    <DialogDescription>Use this tool to send assets.</DialogDescription>
   </DialogHeader>
 
-  <Label for="recipient">Recipient</Label>
-  <Input id="recipient" v-model="recipient" placeholder="Recipient address" />
-  <Label>Assets</Label>
-  <AssetInput
-    v-for="asset in selected"
-    :key="asset.tokenId"
-    v-model="asset.amount"
-    :asset="asset.info"
-  />
+  <form id="send-form" class="space-y-4" @submit="onSubmit">
+    <FormField v-slot="{ componentField }" v-model="recipient" name="recipient">
+      <FormItem>
+        <FormLabel>Recipient</FormLabel>
+        <FormControl>
+          <Input type="text" placeholder="Recipient address" v-bind="componentField" />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <div class="space-y-2">
+      <FormField
+        v-for="(asset, index) in selected"
+        v-slot="{ componentField }"
+        :key="asset.tokenId"
+        v-model="asset.amount"
+        :name="`asset[${index}]`"
+      >
+        <FormItem>
+          <FormLabel v-if="index === 0">Assets</FormLabel>
+          <FormControl>
+            <AssetInput v-bind="componentField" :asset="asset.info" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
+  </form>
+
   <Separator />
 
   <Popover v-model:open="selectorOpened">
@@ -192,7 +211,7 @@ async function sign() {
       <Button variant="outline">Cancel</Button>
     </DialogClose>
 
-    <Button :loading="loading" class="gap-2" @click="sign()"
+    <Button type="submit" form="send-form" :loading="loading" class="gap-2"
       >Send <template #loading>Sending...</template></Button
     >
   </DialogFooter>

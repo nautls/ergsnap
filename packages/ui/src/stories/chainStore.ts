@@ -65,6 +65,7 @@ export const useChainStore = defineStore("chain", () => {
     if (wallet.address) {
       const state = await graphQLService.getState(wallet.address);
       newHeight = state.height;
+      mempoolTxIds.value.clear();
       if (some(state.mempoolTransactionIds)) {
         state.mempoolTransactionIds.map((id) => mempoolTxIds.value.add(id));
       }
