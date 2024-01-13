@@ -9,13 +9,13 @@ import {
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
-import { useForm } from "vee-validate";
+import { GenericValidateFunction, useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
-import { ERG_DECIMALS } from "../constants";
+import { ERG_DECIMALS, ERG_TOKEN_ID } from "../constants";
 import { ergSnap } from "../rpc";
 import { graphQLService } from "../services/graphqlService";
 import { AssetInfo } from "../types";
-import { displayAmount, displayName } from "../utils/assets";
+import { BigN, displayAmount, displayName, undecimalizeBigNumber } from "../utils/assets";
 import AssetIcon from "./AssetIcon.vue";
 import AssetInput from "./AssetInput.vue";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,9 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast/use-toast";
 import { useChainStore, useWalletStore } from "@/stories";
 import { shorten } from "@/utils/string";
+
+const MIN_ERG_AMOUNT = BigNumber(SAFE_MIN_BOX_VALUE.toString());
+const DECIMALIZED_MIN_ERG_AMOUNT = decimalize(SAFE_MIN_BOX_VALUE, ERG_DECIMALS);
 
 const { handleSubmit } = useForm();
 const { toast } = useToast();
@@ -106,11 +109,11 @@ async function send() {
     .to(
       new OutputBuilder(erg, recipient.value).addTokens(
         selected.value
-          .filter((x) => x.info.tokenId !== "ERG")
           .map((x) => ({
             tokenId: x.tokenId,
             amount: undecimalize(x.amount, chain.metadata[x.tokenId]?.decimals ?? 0)
           }))
+          .filter((x) => x.amount > 0n && x.tokenId !== ERG_TOKEN_ID)
       )
     )
     .sendChangeTo(address)
@@ -144,6 +147,30 @@ async function send() {
   loadingStatus.value = "";
 }
 
+const addressValidator = ((value: string) => {
+  if (isEmpty(value)) return "Recipient address is required";
+  return ErgoAddress.validate(value) ? true : "Invalid Ergo address";
+}) as GenericValidateFunction<unknown>; // a little hack to make it work with vee-validate, as it explicitly expects value to be `unknown`
+
+function assetValidator(info: AssetInfo<BigN>): GenericValidateFunction<unknown> {
+  return ((value: string) => {
+    if (isEmpty(value) && info.tokenId === ERG_TOKEN_ID) return "ERG amount is required";
+    const metadata = chain.metadata[info.tokenId];
+    const decimals = metadata?.decimals;
+    const name = metadata?.name ?? shorten(info.tokenId, 10);
+    const amount = undecimalizeBigNumber(BigNumber(value), decimals);
+
+    if (info.tokenId === ERG_TOKEN_ID) {
+      if (amount.lt(MIN_ERG_AMOUNT)) return `Minimum amount is ${DECIMALIZED_MIN_ERG_AMOUNT} ERG`;
+    } else {
+      if (amount.isPositive()) return `${name} amount must be greater than 0`;
+    }
+    if (amount.gt(info.amount)) return `Insufficient ${name} balance`;
+
+    return true;
+  }) as GenericValidateFunction<unknown>; //  // a little hack to make it work with vee-validate, as it explicitly expects value to be `unknown`
+}
+
 const onSubmit = handleSubmit(async () => {
   try {
     await send();
@@ -166,8 +193,13 @@ const onSubmit = handleSubmit(async () => {
     <DialogDescription>Use this tool to send assets.</DialogDescription>
   </DialogHeader>
 
-  <form id="send-form" class="space-y-4" @submit="onSubmit">
-    <FormField v-slot="{ componentField }" v-model="recipient" name="recipient">
+  <form id="send-form" class="space-y-4" novalidate @submit="onSubmit">
+    <FormField
+      v-slot="{ componentField }"
+      v-model="recipient"
+      name="recipient"
+      :rules="addressValidator"
+    >
       <FormItem>
         <FormLabel>Recipient</FormLabel>
         <FormControl>
@@ -183,7 +215,8 @@ const onSubmit = handleSubmit(async () => {
         v-slot="{ componentField }"
         :key="asset.tokenId"
         v-model="asset.amount"
-        :name="`asset[${index}]`"
+        :name="`assets[${index}]`"
+        :rules="assetValidator(asset.info)"
       >
         <FormItem>
           <FormLabel v-if="index === 0">Assets</FormLabel>

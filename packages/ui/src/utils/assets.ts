@@ -12,7 +12,7 @@ const BIG_NUMBER_IN_SHORT = Intl.NumberFormat("en", {
 
 const SHORT_NUMBER_THRESHOLD = 1_000_000;
 
-type BigN = BigNumber | Readonly<BigNumber>;
+export type BigN = BigNumber | Readonly<BigNumber>;
 
 type ChainStore = ReturnType<typeof useChainStore>;
 
@@ -53,7 +53,8 @@ export function formatBigNumber(number?: BigN, decimals?: number): string {
   });
 }
 
-export function undecimalizeBigNumber(number: BigN, decimals: number) {
+export function undecimalizeBigNumber(number: BigN, decimals?: number): BigN {
+  if (!decimals) return number;
   return number.decimalPlaces(decimals).shiftedBy(decimals);
 }
 
