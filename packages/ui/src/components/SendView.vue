@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isEmpty, undecimalize } from "@fleet-sdk/common";
+import { decimalize, isEmpty, undecimalize } from "@fleet-sdk/common";
 import {
   ErgoAddress,
   OutputBuilder,
@@ -9,12 +9,13 @@ import {
 import BigNumber from "bignumber.js";
 import { differenceBy } from "lodash-es";
 import { ChevronsUpDown } from "lucide-vue-next";
+import { GenericValidateFunction, useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
-import { ERG_DECIMALS } from "../constants";
+import { ERG_DECIMALS, ERG_TOKEN_ID } from "../constants";
 import { ergSnap } from "../rpc";
 import { graphQLService } from "../services/graphqlService";
 import { AssetInfo } from "../types";
-import { decimalizeBigNumber, displayAmount, displayName } from "../utils/assets";
+import { BigN, displayAmount, displayName, undecimalizeBigNumber } from "../utils/assets";
 import AssetIcon from "./AssetIcon.vue";
 import AssetInput from "./AssetInput.vue";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem
+  CommandItem,
+  CommandList
 } from "@/components/ui/command";
 import {
   DialogClose,
@@ -32,14 +34,18 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast/use-toast";
 import { useChainStore, useWalletStore } from "@/stories";
 import { shorten } from "@/utils/string";
 
+const MIN_ERG_AMOUNT = BigNumber(SAFE_MIN_BOX_VALUE.toString());
+const DECIMALIZED_MIN_ERG_AMOUNT = decimalize(SAFE_MIN_BOX_VALUE, ERG_DECIMALS);
+
+const { handleSubmit } = useForm();
 const { toast } = useToast();
 
 type Asset = AssetInfo<Readonly<BigNumber>>;
@@ -59,6 +65,7 @@ const loadingStatus = ref("");
 const selectorOpened = ref(false);
 const recipient = ref("");
 const selected = ref<SelectedAsset[]>([]);
+
 const unselected = computed(() => {
   if (isEmpty(selected.value)) {
     return wallet.balance;
@@ -67,26 +74,33 @@ const unselected = computed(() => {
   return differenceBy(wallet.balance, selected.value, (x) => x.tokenId);
 });
 
+const ergAmount = computed(() => {
+  const erg = selected.value[0];
+  return undecimalize(erg?.amount ?? "0", ERG_DECIMALS);
+});
+
 onMounted(() => {
   select(wallet.balance[0]);
-  selected.value[0].amount = decimalizeBigNumber(
-    BigNumber(SAFE_MIN_BOX_VALUE.toString()),
-    ERG_DECIMALS
-  ).toString();
 });
 
 function select(asset: Asset) {
   selectorOpened.value = false;
+
+  if (asset.tokenId !== "ERG" && ergAmount.value < SAFE_MIN_BOX_VALUE) {
+    const erg = selected.value[0];
+    erg.amount = decimalize(SAFE_MIN_BOX_VALUE, ERG_DECIMALS);
+  }
+
   selected.value.push({
-    amount: "0",
+    amount: "",
     tokenId: asset.tokenId,
     info: asset
   });
 }
 
-async function sign() {
+async function send() {
   loading.value = true;
-  loadingStatus.value = "Fetching inputs...";
+  loadingStatus.value = "Loading...";
   const address = ErgoAddress.fromBase58(wallet.address);
   const inputs = await graphQLService.getBoxes({ where: { ergoTree: address.ergoTree } });
   const erg = undecimalize(selected.value[0].amount, ERG_DECIMALS);
@@ -95,11 +109,11 @@ async function sign() {
     .to(
       new OutputBuilder(erg, recipient.value).addTokens(
         selected.value
-          .filter((x) => x.info.tokenId !== "ERG")
           .map((x) => ({
             tokenId: x.tokenId,
             amount: undecimalize(x.amount, chain.metadata[x.tokenId]?.decimals ?? 0)
           }))
+          .filter((x) => x.amount > 0n && x.tokenId !== ERG_TOKEN_ID)
       )
     )
     .sendChangeTo(address)
@@ -130,24 +144,91 @@ async function sign() {
   }
 
   loading.value = false;
+  loadingStatus.value = "";
 }
+
+const addressValidator = ((value: string) => {
+  if (isEmpty(value)) return "Recipient address is required";
+  return ErgoAddress.validate(value) ? true : "Invalid Ergo address";
+}) as GenericValidateFunction<unknown>; // a little hack to make it work with vee-validate, as it explicitly expects value to be `unknown`
+
+function assetValidator(info: AssetInfo<BigN>): GenericValidateFunction<unknown> {
+  return ((value: string) => {
+    if (isEmpty(value) && info.tokenId === ERG_TOKEN_ID) return "ERG amount is required";
+    const metadata = chain.metadata[info.tokenId];
+    const decimals = metadata?.decimals;
+    const name = metadata?.name ?? shorten(info.tokenId, 10);
+    const amount = undecimalizeBigNumber(BigNumber(value), decimals);
+
+    if (info.tokenId === ERG_TOKEN_ID) {
+      if (amount.lt(MIN_ERG_AMOUNT)) return `Minimum amount is ${DECIMALIZED_MIN_ERG_AMOUNT} ERG`;
+    } else {
+      if (amount.isPositive()) return `${name} amount must be greater than 0`;
+    }
+    if (amount.gt(info.amount)) return `Insufficient ${name} balance`;
+
+    return true;
+  }) as GenericValidateFunction<unknown>; //  // a little hack to make it work with vee-validate, as it explicitly expects value to be `unknown`
+}
+
+const onSubmit = handleSubmit(async () => {
+  try {
+    await send();
+  } catch (e) {
+    loading.value = false;
+    loadingStatus.value = "";
+
+    toast({
+      title: "Something went wrong",
+      description: (e as Error).message,
+      variant: "destructive"
+    });
+  }
+});
 </script>
 
 <template>
   <DialogHeader>
     <DialogTitle>Send</DialogTitle>
-    <DialogDescription> Use this tool to send assets. </DialogDescription>
+    <DialogDescription>Use this tool to send assets.</DialogDescription>
   </DialogHeader>
 
-  <Label for="recipient">Recipient</Label>
-  <Input id="recipient" v-model="recipient" placeholder="Recipient address" />
-  <Label>Assets</Label>
-  <AssetInput
-    v-for="asset in selected"
-    :key="asset.tokenId"
-    v-model="asset.amount"
-    :asset="asset.info"
-  />
+  <form id="send-form" class="space-y-4" novalidate @submit="onSubmit">
+    <FormField
+      v-slot="{ componentField }"
+      v-model="recipient"
+      name="recipient"
+      :rules="addressValidator"
+    >
+      <FormItem>
+        <FormLabel>Recipient</FormLabel>
+        <FormControl>
+          <Input type="text" placeholder="Recipient address" v-bind="componentField" />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <div class="space-y-2">
+      <FormField
+        v-for="(asset, index) in selected"
+        v-slot="{ componentField }"
+        :key="asset.tokenId"
+        v-model="asset.amount"
+        :name="`assets[${index}]`"
+        :rules="assetValidator(asset.info)"
+      >
+        <FormItem>
+          <FormLabel v-if="index === 0">Assets</FormLabel>
+          <FormControl>
+            <AssetInput v-bind="componentField" :asset="asset.info" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
+  </form>
+
   <Separator />
 
   <Popover v-model:open="selectorOpened">
@@ -165,32 +246,34 @@ async function sign() {
     </PopoverTrigger>
     <PopoverContent class="w-[21rem] p-0">
       <Command>
-        <CommandInput placeholder="Search framework..." />
-        <CommandEmpty>No asset found.</CommandEmpty>
-        <CommandGroup>
-          <CommandItem
-            v-for="asset in unselected"
-            :key="asset.tokenId"
-            class="gap-2"
-            :value="displayName(asset, chain)"
-            @select="select(asset)"
-          >
-            <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
-            <div class="flex-grow">{{ displayName(asset, chain) }}</div>
-            {{ displayAmount(asset, chain) }}
-          </CommandItem>
-        </CommandGroup>
+        <CommandInput placeholder="Search assets..." />
+        <CommandList>
+          <CommandEmpty>No asset found.</CommandEmpty>
+          <CommandGroup>
+            <CommandItem
+              v-for="asset in unselected"
+              :key="asset.tokenId"
+              class="gap-2"
+              :value="displayName(asset, chain)"
+              @select="select(asset)"
+            >
+              <AssetIcon :token-id="asset.tokenId" custom-class="w-5" />
+              <div class="flex-grow">{{ displayName(asset, chain) }}</div>
+              {{ displayAmount(asset, chain) }}
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
       </Command>
     </PopoverContent>
   </Popover>
 
   <DialogFooter>
     <DialogClose as-child>
-      <Button variant="outline">Cancel</Button>
+      <Button variant="outline" :disabled="loading">Cancel</Button>
     </DialogClose>
 
-    <Button :loading="loading" class="gap-2" @click="sign()"
-      >Send <template #loading>Sending...</template></Button
+    <Button type="submit" form="send-form" :loading="loading" class="gap-2" :disabled="loading"
+      >Send <template #loading>{{ loadingStatus }}</template></Button
     >
   </DialogFooter>
 </template>

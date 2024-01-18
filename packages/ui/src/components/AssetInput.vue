@@ -2,12 +2,12 @@
 import BigNumber from "bignumber.js";
 import { PropType, ref, watch } from "vue";
 import { computed } from "vue";
+import { useChainStore } from "../stories";
 import AssetIcon from "./AssetIcon.vue";
 import { vCleave } from "@/directives/cleave";
 import { AssetInfo, CleaveOnChangedEvent, CleaveOptions, HTMLCleaveElement } from "@/types";
-import { decimalizeBigNumber, displayName, displayAmount } from "@/utils/assets";
+import { decimalizeBigNumber, displayAmount, displayName } from "@/utils/assets";
 import { cn } from "@/utils/chadcn";
-import { useChainStore } from "../stories";
 
 const chain = useChainStore();
 
@@ -76,6 +76,7 @@ defineExpose({ focus });
   <div class="relative">
     <input
       ref="inputEl"
+      v-bind="$attrs"
       v-cleave="{
         ...options,
         numeral: true,
@@ -84,6 +85,7 @@ defineExpose({ focus });
         initValue: props.modelValue,
         onValueChanged: onChanged
       }"
+      placeholder="0"
       :class="
         cn(
           'flex h-16 w-full rounded-md border border-input bg-background px-3 py-2 pb-6 pr-28 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
@@ -92,7 +94,7 @@ defineExpose({ focus });
       "
     />
     <div class="absolute right-3 top-3 flex flex-row items-center gap-1">
-      <div>{{ displayName(asset, chain) }}</div>
+      <div>{{ displayName(asset, chain, 10) }}</div>
       <AssetIcon :token-id="props.asset?.tokenId ?? ''" custom-class="w-5" />
     </div>
     <div class="absolute bottom-2 right-3 text-xs text-muted-foreground">

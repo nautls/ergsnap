@@ -17,5 +17,5 @@ export function addressUrlFor(address?: string) {
 }
 
 export function getTransactionUrlFor(txId: string): string {
-  return new URL(`/transactions/${txId}`, EXPLORER_URL).href;
+  return new URL(`transactions/${txId}`, EXPLORER_URL).href;
 }

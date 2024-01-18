@@ -38,7 +38,7 @@ function calculateColor(tokenId: string) {
     <empty-icon
       v-else
       :class="customClass"
-      class="fill-gray-400 opacity-50"
+      class="fill-gray-400 opacity-80"
       :style="`fill: ${color}`"
     />
   </div>

@@ -67,7 +67,7 @@ function onSuccessTX(id: string) {
               <Send class="m-auto" :size="16" /> Send
             </Button>
           </DialogTrigger>
-          <DialogContent class="max-w-[24rem]">
+          <DialogContent class="max-h-[80vh] max-w-[24rem] overflow-auto">
             <SendView @success="onSuccessTX" />
           </DialogContent>
         </Dialog>
