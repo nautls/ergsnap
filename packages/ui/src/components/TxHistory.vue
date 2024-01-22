@@ -58,9 +58,7 @@ watch(
         <div v-for="(tx, index) in history" :key="tx.transactionId" class="w-full space-y-2">
           <div class="flex items-center justify-between">
             <ExplorerLink type="transaction" :value="tx.transactionId"
-              ><Badge variant="secondary" class="font-mono">{{
-                shorten(tx.transactionId, 25)
-              }}</Badge>
+              ><Badge variant="secondary">{{ shorten(tx.transactionId, 25) }}</Badge>
             </ExplorerLink>
             <div class="text-xs">
               {{ formatTimeAgo(new Date(tx.timestamp), { showSecond: true }) }}
@@ -83,7 +81,7 @@ watch(
               >Fee: {{ decimalize(tx.fee, ERG_DECIMALS) }} ERG</Badge
             >
             <Badge variant="success">
-              {{ formatBigNumber(BigNumber(chain.height - tx.inclusionHeight)) }} confirmations
+              {{ formatBigNumber(BigNumber(chain.height - tx.inclusionHeight + 1)) }} confirmations
             </Badge>
           </div>
           <Separator v-if="index < history.length - 1" />
