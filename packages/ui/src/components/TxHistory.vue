@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { decimalize, isEmpty, orderBy } from "@fleet-sdk/common";
 import { formatTimeAgo } from "@vueuse/core";
+import BigNumber from "bignumber.js";
 import { Clock } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import { ERG_DECIMALS } from "../constants";
 import { useChainStore, useWalletStore } from "../stories";
+import { formatBigNumber } from "../utils/assets";
 import { shorten } from "../utils/string";
 import AssetRow from "./AssetRow.vue";
 import ExplorerLink from "./ExplorerLink.vue";
@@ -14,8 +16,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ParsedTransaction, parseTransaction } from "@/models/transactionParser";
 import { graphQLService } from "@/services/graphqlService";
-import { formatBigNumber } from "../utils/assets";
-import BigNumber from "bignumber.js";
 
 const wallet = useWalletStore();
 const chain = useChainStore();
@@ -31,17 +31,10 @@ watch(
     }
 
     const txs = await graphQLService.getConfirmedTransactions(wallet.address);
-    const parsedHistory = orderBy(
-      txs.map(parseTransaction(wallet.address)),
-      (x) => x.timestamp,
-      "desc"
-    );
-    history.value = parsedHistory;
+    history.value = orderBy(txs.map(parseTransaction(wallet.address)), (x) => x.timestamp, "desc");
 
-    const tokenIds = parsedHistory
-      .flatMap((x) => x.inputs.assets.concat(x.outputs.assets))
-      .map((x) => x.tokenId);
-    chain.loadMetadata(tokenIds);
+    // load assets metadata
+    chain.loadMetadata(history.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
   }
 );
 </script>
@@ -65,7 +58,7 @@ watch(
             </div>
           </div>
           <div>
-            <div v-for="asset in tx.all" :key="asset.tokenId">
+            <div v-for="asset in tx.balance" :key="asset.tokenId">
               <AssetRow
                 root-class="py-1 gap-2"
                 link
@@ -90,4 +83,3 @@ watch(
     </ScrollArea>
   </CardContent>
 </template>
-@/models/transactionParser

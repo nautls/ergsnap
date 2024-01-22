@@ -1,5 +1,5 @@
 import { Transaction as GQLTransaction } from "@ergo-graphql/types";
-import { BoxSummary, uniq, utxoDiff, utxoSum } from "@fleet-sdk/common";
+import { BoxSummary, utxoDiff } from "@fleet-sdk/common";
 import { ErgoAddress, FEE_CONTRACT } from "@fleet-sdk/core";
 import BigNumber from "bignumber.js";
 import { ERG_TOKEN_ID } from "../constants";
@@ -12,16 +12,7 @@ export type ParsedTransaction = {
   timestamp: number;
   inclusionHeight: number;
   fee?: bigint;
-
-  inputs: {
-    from: string[];
-    assets: AssetInfo<BigNumber>[];
-  };
-  outputs: {
-    to: string[];
-    assets: AssetInfo<BigNumber>[];
-  };
-  all: AssetInfo<BigNumber>[];
+  balance: AssetInfo<BigNumber>[];
 };
 
 export function parseTransaction(ownerAddress: string) {
@@ -37,16 +28,7 @@ export function parseTransaction(ownerAddress: string) {
       timestamp: Number(rawTx.timestamp),
       inclusionHeight: rawTx.inclusionHeight,
       fee: BigInt(rawTx.outputs.find((x) => x.address === FEE_ADDRESS)?.value ?? 0),
-
-      inputs: Object.freeze({
-        from: uniq(ownInputs.map((x) => x.address)),
-        assets: parseSummary(utxoSum(ownInputs))
-      }),
-      outputs: {
-        to: uniq(rawTx.outputs.map((x) => x.address).filter((x) => x !== FEE_ADDRESS)),
-        assets: parseSummary(utxoSum(outputs))
-      },
-      all: parseSummary(utxoDiff(outputs, ownInputs))
+      balance: parseSummary(utxoDiff(outputs, ownInputs))
     };
   };
 }

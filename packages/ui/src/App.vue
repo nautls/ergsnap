@@ -19,7 +19,7 @@ import Toaster from "@/components/ui/toast/Toaster.vue";
 
         <Card class="w-5/12">
           <CardHeader class="flex-row items-center justify-between space-y-0">
-            <CardTitle class="text-sm font-medium">Transactions history</CardTitle>
+            <CardTitle class="text-sm font-medium">Transaction History</CardTitle>
             <Clock :size="14" />
           </CardHeader>
 
