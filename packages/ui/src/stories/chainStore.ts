@@ -102,7 +102,7 @@ export const useChainStore = defineStore("chain", () => {
     }
   }
 
-  return { prices, metadata, loading, height, mempoolTxIds };
+  return { prices, metadata, loading, height, mempoolTxIds, loadMetadata };
 });
 
 if (import.meta.hot) {

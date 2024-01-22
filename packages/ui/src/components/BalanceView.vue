@@ -51,7 +51,7 @@ function onSuccessTX(id: string) {
 <template>
   <div class="flex flex-grow flex-col gap-8">
     <Card>
-      <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader class="flex-row items-center justify-between space-y-0">
         <CardTitle class="text-sm font-medium">Total Balance</CardTitle>
         <Sigma :size="14" />
       </CardHeader>
@@ -85,10 +85,10 @@ function onSuccessTX(id: string) {
     <div>
       <Card class="flex-grow">
         <CardContent class="py-1">
-          <ScrollArea class="-mx-6 h-[19rem]">
+          <ScrollArea class="-mx-6 h-[17.9rem]">
             <div class="my-1">
               <div v-for="(asset, index) in wallet.balance" :key="asset.tokenId" class="px-6">
-                <AssetRow root-class="py-4" :asset="asset" :link="true" />
+                <AssetRow root-class="py-4" logo-class="w-10" :asset="asset" :link="true" />
                 <Separator v-if="index < wallet.balance.length - 1" />
               </div>
             </div>

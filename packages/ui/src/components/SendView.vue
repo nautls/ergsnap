@@ -163,7 +163,7 @@ function assetValidator(info: AssetInfo<BigN>): GenericValidateFunction<unknown>
     if (info.tokenId === ERG_TOKEN_ID) {
       if (amount.lt(MIN_ERG_AMOUNT)) return `Minimum amount is ${DECIMALIZED_MIN_ERG_AMOUNT} ERG`;
     } else {
-      if (amount.isPositive()) return `${name} amount must be greater than 0`;
+      if (amount.isNegative()) return `${name} amount must be greater than 0`;
     }
     if (amount.gt(info.amount)) return `Insufficient ${name} balance`;
 
