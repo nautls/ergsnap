@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { isEmpty } from "@fleet-sdk/common";
 import { BigNumber } from "bignumber.js";
-import { Download, Send, Sigma } from "lucide-vue-next";
+import { Download, PieChart, Send, Sigma } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import SendView from "./SendView.vue";
 import AddressView from "@/components/AddressView.vue";
@@ -63,7 +64,7 @@ function onSuccessTX(id: string) {
 
         <Dialog v-model:open="modalOpen">
           <DialogTrigger as-child>
-            <Button class="gap-2" size="sm" variant="secondary">
+            <Button :disabled="!wallet.connected" class="gap-2" size="sm" variant="secondary">
               <Send class="m-auto" :size="16" /> Send
             </Button>
           </DialogTrigger>
@@ -73,7 +74,7 @@ function onSuccessTX(id: string) {
         </Dialog>
         <Popover>
           <PopoverTrigger as-child>
-            <Button class="gap-2" size="sm" variant="secondary">
+            <Button :disabled="!wallet.connected" class="gap-2" size="sm" variant="secondary">
               <Download class="m-auto" :size="16" /> Receive
             </Button>
           </PopoverTrigger>
@@ -83,11 +84,16 @@ function onSuccessTX(id: string) {
     </Card>
 
     <div>
-      <Card class="flex-grow">
-        <CardContent class="py-1">
-          <ScrollArea class="-mx-6 h-[17.9rem]">
-            <div class="my-1">
-              <div v-for="(asset, index) in wallet.balance" :key="asset.tokenId" class="px-6">
+      <Card class="h-[18.5rem] flex-grow">
+        <CardContent class="flex h-full w-full px-0 py-1 align-middle">
+          <div v-if="isEmpty(wallet.balance)" class="m-auto cursor-default space-y-4">
+            <PieChart class="m-auto text-muted-foreground/30" :size="60" />
+            <p class="text-muted-foreground">The balance is empty</p>
+          </div>
+
+          <ScrollArea v-else class="h-full w-full">
+            <div class="my-1 px-6">
+              <div v-for="(asset, index) in wallet.balance" :key="asset.tokenId">
                 <AssetRow root-class="py-4" logo-class="w-10" :asset="asset" :link="true" />
                 <Separator v-if="index < wallet.balance.length - 1" />
               </div>

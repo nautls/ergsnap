@@ -36,11 +36,7 @@ export const useWalletStore = defineStore("wallet", () => {
 
   onMounted(async () => {
     const connected = isMetamaskPresent() && isMetamaskConnected() && (await ergSnap.getVersion());
-
-    if (connected) {
-      await loadAddress();
-    }
-
+    if (connected) await loadAddress();
     loading.value = false;
   });
 
@@ -106,8 +102,13 @@ export const useWalletStore = defineStore("wallet", () => {
   }
 
   async function connect() {
-    loading.value = true;
-    connected.value = await ergSnap.connect();
+    try {
+      loading.value = true;
+      connected.value = await ergSnap.connect();
+    } finally {
+      loading.value = false;
+    }
+
     return connected.value;
   }
 

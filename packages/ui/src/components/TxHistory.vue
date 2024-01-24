@@ -42,11 +42,11 @@ watch(
 <template>
   <CardContent class="flex h-[24.8rem] w-full px-0 py-1 align-middle">
     <div v-if="isEmpty(history)" class="m-auto cursor-default space-y-4">
-      <Clock class="m-auto text-muted-foreground/30" :size="64" />
+      <Clock class="m-auto text-muted-foreground/30" :size="60" />
       <p class="text-muted-foreground">No transactions</p>
     </div>
 
-    <ScrollArea v-else class="h-[24.8rem] w-full">
+    <ScrollArea v-else class="w-full">
       <div class="space-y-6 px-6 text-sm">
         <div v-for="(tx, index) in history" :key="tx.transactionId" class="w-full space-y-2">
           <div class="flex items-center justify-between">
