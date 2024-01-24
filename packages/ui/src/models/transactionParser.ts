@@ -7,12 +7,12 @@ import { AssetInfo } from "../types";
 
 const FEE_ADDRESS = ErgoAddress.fromErgoTree(FEE_CONTRACT).encode();
 
-export type ParsedTransaction = {
+export type ParsedTransaction<T = BigNumber> = {
   transactionId: string;
   timestamp: number;
   inclusionHeight: number;
   fee?: bigint;
-  balance: AssetInfo<BigNumber>[];
+  balance: AssetInfo<T>[];
 };
 
 export function parseTransaction(ownerAddress: string) {

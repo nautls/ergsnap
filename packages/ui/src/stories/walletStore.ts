@@ -4,6 +4,7 @@ import { BigNumber } from "bignumber.js";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { onMounted, ref, watch } from "vue";
 import { ERG_TOKEN_ID } from "../constants";
+import { ParsedTransaction, parseTransaction } from "../models/transactionParser";
 import { graphQLService } from "../services/graphqlService";
 import { AssetInfo } from "../types";
 import { useChainStore } from "./chainStore";
@@ -12,7 +13,7 @@ import { ergSnap, isMetamaskConnected, isMetamaskPresent } from "@/rpc";
 const { freeze } = Object;
 const fbn = (n: string): BigNumber => freeze(BigNumber(n)) as BigNumber;
 
-const balanceSerializer = {
+const assetInfoSerializer = {
   read(raw: string): AssetInfo<BigNumber>[] {
     const data = JSON.parse(raw) as AssetInfo<string>[];
     return data.map((asset) => ({ tokenId: asset.tokenId, amount: fbn(asset.amount) }));
@@ -22,21 +23,51 @@ const balanceSerializer = {
   }
 };
 
+const txHistorySerializer = {
+  read(raw: string): ParsedTransaction[] {
+    const data = JSON.parse(raw) as ParsedTransaction<string>[];
+    return data.map((tx) => ({
+      ...tx,
+      fee: tx.fee ? BigInt(tx.fee) : undefined,
+      balance: tx.balance.map((asset) => ({
+        tokenId: asset.tokenId,
+        amount: fbn(asset.amount)
+      }))
+    }));
+  },
+  write(value: ParsedTransaction[]): string {
+    return JSON.stringify(
+      value.map((tx) => ({
+        ...tx,
+        fee: tx.fee?.toString(),
+        balance: tx.balance.map((asset) => ({
+          tokenId: asset.tokenId,
+          amount: asset.amount.toString()
+        }))
+      }))
+    );
+  }
+};
+
 export const useWalletStore = defineStore("wallet", () => {
   const chain = useChainStore();
 
   const balance = ref<AssetInfo<BigNumber>[]>([]);
   const boxes = ref<Readonly<Box[]>>([]);
+  const txHistory = ref<Readonly<ParsedTransaction[]>>([]);
 
   const loading = ref(true);
   const connected = ref(false);
   const address = ref("");
 
   let _fetchingBoxes = false;
+  let _fetchingTxHistory = false;
 
   onMounted(async () => {
-    const connected = isMetamaskPresent() && isMetamaskConnected() && (await ergSnap.getVersion());
-    if (connected) await loadAddress();
+    connected.value =
+      isMetamaskPresent() && isMetamaskConnected() && !!(await ergSnap.getVersion());
+    if (connected.value) await loadAddress();
+
     loading.value = false;
   });
 
@@ -44,21 +75,46 @@ export const useWalletStore = defineStore("wallet", () => {
     if (connected) {
       await loadAddress();
       loading.value = true;
+    } else {
+      boxes.value = [];
+      txHistory.value = [];
     }
 
     loading.value = false;
   });
 
-  watch(() => chain.height, fetchBoxes);
-  watch(() => chain.mempoolTxIds, fetchBoxes, { deep: true });
+  watch(() => chain.height, update);
+  watch(() => chain.mempoolTxIds, update, { deep: true });
   watch(boxes, updateBalance);
   watch(address, (addr) => {
-    fetchBoxes();
-    useStorage(`${addr}-balance-cache`, balance, localStorage, {
-      serializer: balanceSerializer,
-      listenToStorageChanges: false
-    });
+    update();
+
+    useStorage(`${addr}-balance`, balance, localStorage, { serializer: assetInfoSerializer });
+    useStorage(`${addr}-tx-history`, txHistory, localStorage, { serializer: txHistorySerializer });
   });
+
+  async function update() {
+    return Promise.all([fetchBoxes(), fetchTxHistory()]);
+  }
+
+  async function fetchTxHistory() {
+    if (!address.value || _fetchingTxHistory) return;
+    _fetchingTxHistory = true;
+
+    try {
+      const txs = await graphQLService.getConfirmedTransactions(address.value);
+      txHistory.value = orderBy(
+        txs.map(parseTransaction(address.value)),
+        (x) => x.timestamp,
+        "desc"
+      );
+
+      // load assets metadata
+      chain.loadMetadata(txHistory.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
+    } finally {
+      _fetchingTxHistory = false;
+    }
+  }
 
   async function fetchBoxes() {
     if (!address.value || _fetchingBoxes) return;
@@ -112,7 +168,7 @@ export const useWalletStore = defineStore("wallet", () => {
     return connected.value;
   }
 
-  return { connect, connected, loading, address, balance };
+  return { connect, connected, loading, address, balance, txHistory };
 });
 
 if (import.meta.hot) {

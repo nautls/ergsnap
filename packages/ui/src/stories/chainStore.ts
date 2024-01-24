@@ -19,7 +19,7 @@ export const useChainStore = defineStore("chain", () => {
 
   // state
   const loading = ref(true);
-  const height = ref(0);
+  const height = useStorage("height", 0); // ref(0);
   const mempoolTxIds = ref(new Set<string>());
   const prices = useStorage<AssetPriceRates>("prices-cache", {});
   const metadata = useStorage<StateTokenMetadata>("token-metadata-cache", {
