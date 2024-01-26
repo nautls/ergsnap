@@ -10,7 +10,7 @@ const FEE_ADDRESS = ErgoAddress.fromErgoTree(FEE_CONTRACT).encode();
 export type ParsedTransaction<T = BigNumber> = {
   transactionId: string;
   timestamp: number;
-  inclusionHeight: number;
+  inclusionHeight?: number;
   fee?: bigint;
   balance: AssetInfo<T>[];
 };

@@ -1,8 +1,9 @@
 import { Box, isEmpty, orderBy, utxoSum } from "@fleet-sdk/common";
 import { useStorage } from "@vueuse/core";
 import { BigNumber } from "bignumber.js";
+import { differenceBy, maxBy } from "lodash-es";
 import { acceptHMRUpdate, defineStore } from "pinia";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { ERG_TOKEN_ID } from "../constants";
 import { ParsedTransaction, parseTransaction } from "../models/transactionParser";
 import { graphQLService } from "../services/graphqlService";
@@ -54,7 +55,8 @@ export const useWalletStore = defineStore("wallet", () => {
 
   const balance = ref<AssetInfo<BigNumber>[]>([]);
   const boxes = ref<Readonly<Box[]>>([]);
-  const txHistory = ref<Readonly<ParsedTransaction[]>>([]);
+  const confirmedTxs = ref<Readonly<ParsedTransaction[]>>([]);
+  const mempoolTxs = ref<Readonly<ParsedTransaction[]>>([]);
 
   const loading = ref(true);
   const connected = ref(false);
@@ -62,6 +64,8 @@ export const useWalletStore = defineStore("wallet", () => {
 
   let _fetchingBoxes = false;
   let _fetchingTxHistory = false;
+  let _fetchingMempool = false;
+  let _minTxHeight: number | undefined = undefined;
 
   onMounted(async () => {
     connected.value =
@@ -77,42 +81,74 @@ export const useWalletStore = defineStore("wallet", () => {
       loading.value = true;
     } else {
       boxes.value = [];
-      txHistory.value = [];
+      confirmedTxs.value = [];
     }
 
     loading.value = false;
   });
 
-  watch(() => chain.height, update);
-  watch(() => chain.mempoolTxIds, update, { deep: true });
-  watch(boxes, updateBalance);
+  watch(
+    () => chain.height,
+    () => Promise.all([fetchBoxes(), fetchTxHistory(), fetchMempool()])
+  );
+  watch(
+    () => chain.mempoolTxIds,
+    () => Promise.all([fetchBoxes(), fetchMempool()]),
+    { deep: true }
+  );
   watch(address, (addr) => {
-    update();
-
     useStorage(`${addr}-balance`, balance, localStorage, { serializer: assetInfoSerializer });
-    useStorage(`${addr}-tx-history`, txHistory, localStorage, { serializer: txHistorySerializer });
+    useStorage(`${addr}-tx-history`, confirmedTxs, localStorage, {
+      serializer: txHistorySerializer
+    });
+    Promise.all([fetchBoxes(), fetchTxHistory(), fetchMempool()]);
   });
+  watch(boxes, updateBalance);
 
-  async function update() {
-    return Promise.all([fetchBoxes(), fetchTxHistory()]);
-  }
+  const history = computed(() => {
+    const diff = differenceBy(mempoolTxs.value, confirmedTxs.value, (x) => x.transactionId);
+
+    return orderBy(confirmedTxs.value.concat(diff), (x) => x.timestamp, "desc");
+  });
 
   async function fetchTxHistory() {
     if (!address.value || _fetchingTxHistory) return;
     _fetchingTxHistory = true;
 
     try {
-      const txs = await graphQLService.getConfirmedTransactions(address.value);
-      txHistory.value = orderBy(
-        txs.map(parseTransaction(address.value)),
-        (x) => x.timestamp,
-        "desc"
+      const confTxs = await graphQLService.getConfirmedTransactions(address.value, _minTxHeight);
+      const diff = differenceBy(confTxs, confirmedTxs.value, (x) => x.transactionId).map(
+        parseTransaction(address.value)
       );
+      confirmedTxs.value = confirmedTxs.value.concat(diff);
 
       // load assets metadata
-      chain.loadMetadata(txHistory.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
+      chain.loadMetadata(diff.flatMap((x) => x.balance.map((y) => y.tokenId)));
     } finally {
       _fetchingTxHistory = false;
+    }
+
+    const lastTx = maxBy(confirmedTxs.value, (x) => x.inclusionHeight);
+    if (lastTx) {
+      _minTxHeight =
+        lastTx.inclusionHeight === _minTxHeight ? chain.height : lastTx.inclusionHeight;
+    } else {
+      _minTxHeight = chain.height;
+    }
+  }
+
+  async function fetchMempool() {
+    if (!address.value || _fetchingMempool) return;
+    _fetchingMempool = true;
+
+    try {
+      const txs = await graphQLService.getMempoolTransactions(address.value);
+      mempoolTxs.value = txs.map(parseTransaction(address.value));
+
+      // load assets metadata
+      chain.loadMetadata(mempoolTxs.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
+    } finally {
+      _fetchingMempool = false;
     }
   }
 
@@ -168,7 +204,7 @@ export const useWalletStore = defineStore("wallet", () => {
     return connected.value;
   }
 
-  return { connect, connected, loading, address, balance, txHistory };
+  return { connect, connected, loading, address, balance, history };
 });
 
 if (import.meta.hot) {
