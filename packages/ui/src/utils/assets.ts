@@ -18,14 +18,16 @@ type ChainStore = ReturnType<typeof useChainStore>;
 
 export function displayAmount(
   asset: AssetInfo<bigint | BigN> | undefined,
-  chainStore: ChainStore
+  chainStore: ChainStore,
+  invertNegative = false
 ): string {
   if (!asset) return "";
 
   const decimals = chainStore.metadata[asset.tokenId]?.decimals ?? 0;
-  return typeof asset.amount === "bigint"
-    ? decimalize(asset.amount, { decimals, thousandMark: "," })
-    : formatBigNumber(decimalizeBigNumber(asset.amount, decimals), decimals);
+  let amount = typeof asset.amount === "bigint" ? BigNumber(String(asset.amount)) : asset.amount;
+  if (invertNegative) amount = amount.isNegative() ? amount.negated() : amount;
+
+  return formatBigNumber(decimalizeBigNumber(amount, decimals), decimals);
 }
 
 export function displayName(

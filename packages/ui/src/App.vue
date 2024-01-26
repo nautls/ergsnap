@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Clock } from "lucide-vue-next";
 import AppHeader from "./components/AppHeader.vue";
+import TxHistory from "./components/TxHistory.vue";
 import BalanceView from "@/components/BalanceView.vue";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Toaster from "@/components/ui/toast/Toaster.vue";
 </script>
 
@@ -17,12 +18,12 @@ import Toaster from "@/components/ui/toast/Toaster.vue";
         <BalanceView />
 
         <Card class="w-5/12">
-          <CardContent class="flex h-full pt-6 align-middle">
-            <div class="m-auto cursor-default space-y-4">
-              <Clock class="m-auto text-muted-foreground/30" :size="64" />
-              <p class="text-muted-foreground">No transactions</p>
-            </div>
-          </CardContent>
+          <CardHeader class="flex-row items-center justify-between space-y-0">
+            <CardTitle class="text-sm font-medium">Transaction History</CardTitle>
+            <Clock :size="14" />
+          </CardHeader>
+
+          <TxHistory />
         </Card>
       </CardContent>
     </Card>

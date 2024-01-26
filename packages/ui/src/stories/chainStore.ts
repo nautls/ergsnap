@@ -16,10 +16,11 @@ export const useChainStore = defineStore("chain", () => {
 
   // private
   let _timer: number;
+  let _lastMempoolClear = Date.now();
 
   // state
   const loading = ref(true);
-  const height = ref(0);
+  const height = useStorage("height", 0);
   const mempoolTxIds = ref(new Set<string>());
   const prices = useStorage<AssetPriceRates>("prices-cache", {});
   const metadata = useStorage<StateTokenMetadata>("token-metadata-cache", {
@@ -65,7 +66,12 @@ export const useChainStore = defineStore("chain", () => {
     if (wallet.address) {
       const state = await graphQLService.getState(wallet.address);
       newHeight = state.height;
-      mempoolTxIds.value.clear();
+
+      if (Date.now() > _lastMempoolClear + 5_000) {
+        mempoolTxIds.value.clear();
+        _lastMempoolClear = Date.now();
+      }
+
       if (some(state.mempoolTransactionIds)) {
         state.mempoolTransactionIds.map((id) => mempoolTxIds.value.add(id));
       }
@@ -102,7 +108,7 @@ export const useChainStore = defineStore("chain", () => {
     }
   }
 
-  return { prices, metadata, loading, height, mempoolTxIds };
+  return { prices, metadata, loading, height, mempoolTxIds, loadMetadata };
 });
 
 if (import.meta.hot) {

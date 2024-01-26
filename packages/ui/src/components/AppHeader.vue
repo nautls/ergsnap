@@ -39,7 +39,7 @@ function toggleTheme() {
         :loading="walletStore.loading"
         @click="walletStore.connect()"
       >
-        Connect
+        Connect Wallet
         <template #loading>Connecting...</template>
       </Button>
 

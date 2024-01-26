@@ -4,8 +4,8 @@ import { cn } from "@/utils/chadcn";
 const props = defineProps({
   class: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 </script>
 

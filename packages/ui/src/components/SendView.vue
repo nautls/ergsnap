@@ -160,11 +160,10 @@ function assetValidator(info: AssetInfo<BigN>): GenericValidateFunction<unknown>
     const name = metadata?.name ?? shorten(info.tokenId, 10);
     const amount = undecimalizeBigNumber(BigNumber(value), decimals);
 
-    if (info.tokenId === ERG_TOKEN_ID) {
-      if (amount.lt(MIN_ERG_AMOUNT)) return `Minimum amount is ${DECIMALIZED_MIN_ERG_AMOUNT} ERG`;
-    } else {
-      if (amount.isPositive()) return `${name} amount must be greater than 0`;
+    if (info.tokenId === ERG_TOKEN_ID && amount.lt(MIN_ERG_AMOUNT)) {
+      return `Minimum amount is ${DECIMALIZED_MIN_ERG_AMOUNT} ERG`;
     }
+    if (amount.isNegative()) return `${name} amount must be greater than 0`;
     if (amount.gt(info.amount)) return `Insufficient ${name} balance`;
 
     return true;
