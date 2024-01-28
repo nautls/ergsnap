@@ -1,4 +1,4 @@
-import { Box, isEmpty, orderBy, utxoSum } from "@fleet-sdk/common";
+import { Box, isEmpty, orderBy, some, utxoSum } from "@fleet-sdk/common";
 import { useStorage } from "@vueuse/core";
 import { BigNumber } from "bignumber.js";
 import { differenceBy, maxBy } from "lodash-es";
@@ -93,7 +93,10 @@ export const useWalletStore = defineStore("wallet", () => {
   );
   watch(
     () => chain.mempoolTxIds,
-    () => Promise.all([fetchBoxes(), fetchMempool()]),
+    async () => {
+      const [hasMempoolChanged] = await Promise.all([fetchMempool(), fetchBoxes()]);
+      if (hasMempoolChanged) chain.setWaitingTransaction(false);
+    },
     { deep: true }
   );
   watch(address, (addr) => {
@@ -138,15 +141,21 @@ export const useWalletStore = defineStore("wallet", () => {
   }
 
   async function fetchMempool() {
-    if (!address.value || _fetchingMempool) return;
+    if (!address.value || _fetchingMempool) return false;
     _fetchingMempool = true;
 
     try {
-      const txs = await graphQLService.getMempoolTransactions(address.value);
-      mempoolTxs.value = txs.map(parseTransaction(address.value));
+      const response = await graphQLService.getMempoolTransactions(address.value);
+      const parsedResponse = response.map(parseTransaction(address.value));
+      const changed = some(differenceBy(parsedResponse, mempoolTxs.value, (x) => x.transactionId));
 
-      // load assets metadata
-      chain.loadMetadata(mempoolTxs.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
+      if (changed) {
+        mempoolTxs.value = parsedResponse;
+        // load assets metadata
+        chain.loadMetadata(mempoolTxs.value.flatMap((x) => x.balance.map((y) => y.tokenId)));
+      }
+
+      return changed;
     } finally {
       _fetchingMempool = false;
     }

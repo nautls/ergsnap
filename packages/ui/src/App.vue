@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { Clock } from "lucide-vue-next";
+import { Clock, Loader2 } from "lucide-vue-next";
 import AppHeader from "./components/AppHeader.vue";
 import TxHistory from "./components/TxHistory.vue";
+import { useChainStore } from "./stories";
 import BalanceView from "@/components/BalanceView.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Toaster from "@/components/ui/toast/Toaster.vue";
+
+const chain = useChainStore();
 </script>
 
 <template>
@@ -20,7 +23,8 @@ import Toaster from "@/components/ui/toast/Toaster.vue";
         <Card class="w-5/12">
           <CardHeader class="flex-row items-center justify-between space-y-0">
             <CardTitle class="text-sm font-medium">Transaction History</CardTitle>
-            <Clock :size="14" />
+            <Loader2 v-if="chain.waitingTransaction" class="animate-spin" :size="16" />
+            <Clock v-else :size="14" />
           </CardHeader>
 
           <TxHistory />

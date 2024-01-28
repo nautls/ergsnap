@@ -20,6 +20,7 @@ export const useChainStore = defineStore("chain", () => {
 
   // state
   const loading = ref(true);
+  const waitingTransaction = ref(false); // true if there is a transaction pending to be included in the mempool
   const height = useStorage("height", 0);
   const mempoolTxIds = ref(new Set<string>());
   const prices = useStorage<AssetPriceRates>("prices-cache", {});
@@ -108,7 +109,20 @@ export const useChainStore = defineStore("chain", () => {
     }
   }
 
-  return { prices, metadata, loading, height, mempoolTxIds, loadMetadata };
+  function setWaitingTransaction(value = true) {
+    waitingTransaction.value = value;
+  }
+
+  return {
+    prices,
+    metadata,
+    loading,
+    height,
+    mempoolTxIds,
+    waitingTransaction,
+    setWaitingTransaction,
+    loadMetadata
+  };
 });
 
 if (import.meta.hot) {
