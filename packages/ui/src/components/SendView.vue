@@ -134,6 +134,7 @@ async function send() {
       description: `Transaction ${shorten(txId, 20)} has been submitted to the blockchain.`
     });
 
+    chain.setWaitingTransaction();
     emit("success", txId);
   } else {
     toast({
