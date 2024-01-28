@@ -67,7 +67,7 @@ export const useChainStore = defineStore("chain", () => {
       const state = await graphQLService.getState(wallet.address);
       newHeight = state.height;
 
-      if (Date.now() > _lastMempoolClear + 5_000) {
+      if (Date.now() > _lastMempoolClear + 10_000) {
         mempoolTxIds.value.clear();
         _lastMempoolClear = Date.now();
       }
