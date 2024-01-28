@@ -11,6 +11,13 @@ const ERGO_SOUNDNESS_BYTES = 24;
 const ERGO_SCHNORR_SIG_LEN = BLAKE2B_256_DIGEST_LEN + ERGO_SOUNDNESS_BYTES;
 const MAX_ITERATIONS = 100;
 
+/**
+ * Generates a Schnorr signature for the given message using the provided secret key.
+ * @param message - The message to be signed.
+ * @param secretKey - The secret key used for signing.
+ * @returns The generated signature.
+ * @throws Error if the signature generation fails after the maximum number of iterations.
+ */
 export function sign(message: Uint8Array, secretKey: Uint8Array) {
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const signature = genSignature(message, secretKey);
@@ -20,6 +27,14 @@ export function sign(message: Uint8Array, secretKey: Uint8Array) {
   throw new Error("Failed to generate signature");
 }
 
+/**
+ * Generates a Schnorr signature for the given message using the provided secret key.
+ *
+ * @param message - The message to be signed.
+ * @param secretKey - The secret key used for signing.
+ * @returns The generated signature as a Uint8Array, or null if the verification fails.
+ * @throws Error if failed to generate commitment.
+ */
 export function genSignature(message: Uint8Array, secretKey: Uint8Array): null | Uint8Array {
   const sk = bytesToNumberBE(secretKey);
   const y = genY();
@@ -38,6 +53,12 @@ export function genSignature(message: Uint8Array, secretKey: Uint8Array): null |
   return signature;
 }
 
+/**
+ * Generates a random value y within the range [1, CURVE.n].
+ *
+ * @returns The generated value y.
+ * @throws Error if failed to generate y after reaching the maximum number of iterations.
+ */
 function genY() {
   let y = 0n;
   let c = 0;
@@ -47,10 +68,17 @@ function genY() {
     c++;
   }
 
-  if (c === MAX_ITERATIONS) throw new Error("Failed to generate y");
+  if (y === 0n) throw new Error("Failed to generate y");
   return y;
 }
 
+/**
+ * Verifies the Schnorr signature for a given message using the provided public key and signature.
+ * @param message - The message to be verified.
+ * @param signature - The signature to be verified.
+ * @param publicKey - The public key corresponding to the private key used to generate the signature.
+ * @returns A boolean indicating whether the signature is valid or not.
+ */
 export function verify(message: Uint8Array, signature: Uint8Array, publicKey: Uint8Array) {
   if (signature.length !== ERGO_SCHNORR_SIG_LEN) return false;
 
@@ -64,6 +92,12 @@ export function verify(message: Uint8Array, signature: Uint8Array, publicKey: Ui
   return numHash(s) === c;
 }
 
+/**
+ * Computes the numeric hash of a given message.
+ *
+ * @param message - The message to be hashed.
+ * @returns The numeric hash of the message.
+ */
 function numHash(message: Uint8Array) {
   return bytesToNumberBE(blake2b256(message).slice(0, ERGO_SOUNDNESS_BYTES));
 }
