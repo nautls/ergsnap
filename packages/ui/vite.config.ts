@@ -4,15 +4,17 @@ import { defineConfig } from "vite";
 import svgLoader from "vite-svg-loader";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue(), svgLoader()],
-  base: "./",
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src")
+export default defineConfig(({ mode }) => {
+  return {
+    plugins: [vue(), svgLoader()],
+    base: mode === "production" ? "/ergsnap/" : "./",
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src")
+      }
+    },
+    server: {
+      port: 8000
     }
-  },
-  server: {
-    port: 8000
-  }
+  };
 });
