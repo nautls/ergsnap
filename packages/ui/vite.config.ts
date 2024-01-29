@@ -7,7 +7,7 @@ import svgLoader from "vite-svg-loader";
 export default defineConfig(({ mode }) => {
   return {
     plugins: [vue(), svgLoader()],
-    base: mode === "production" ? "ergsnap/" : "./",
+    base: mode === "production" ? "/ergsnap/" : "./",
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src")
