@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useColorMode } from "@vueuse/core";
 import { Moon, Sun } from "lucide-vue-next";
+import ErgoLogo from "@/assets/ergo.svg";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast/use-toast";
@@ -28,7 +29,7 @@ function toggleTheme() {
 
 <template>
   <CardHeader class="flex-row items-center gap-2 space-y-0">
-    <img src="../assets/ergo.svg" alt="Nautilus Wallet" class="w-10" />
+    <ErgoLogo class="h-10 w-10" />
     <CardTitle class="flex-grow cursor-default tracking-normal">Ergo Wallet</CardTitle>
 
     <div class="flex gap-2">
